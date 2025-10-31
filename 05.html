@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小精靈逃亡遊戲</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f3f4f6;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: #87CEEB;
+            overflow: hidden;
+            border: 2px solid #000;
+        }
+
+        .character {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        #elf {
+            background-color: #32CD32; /* 小精靈顏色 */
+            left: 100px;
+            top: 100px;
+        }
+
+        #monster {
+            background-color: #FF4500; /* 怪獸顏色 */
+            left: 650px;
+            top: 100px;
+        }
+
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: gold;
+            border-radius: 50%;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div id="elf" class="character"></div>
+        <div id="monster" class="character"></div>
+        <div id="coin" class="coin"></div>
+        <div id="score">分數: 0</div>
+    </div>
+
+    <script>
+        let elf = document.getElementById('elf');
+        let monster = document.getElementById('monster');
+        let coin = document.getElementById('coin');
+        let scoreElement = document.getElementById('score');
+        let score = 0;
+
+        let elfSpeed = 5; // 小精靈的移動速度
+        let monsterSpeed = 2; // 怪獸的移動速度
+        let coinCollected = false;
+
+        // 設置小精靈的移動
+        document.addEventListener('keydown', (e) => {
+            let elfPosition = elf.getBoundingClientRect();
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (elfPosition.top > 0) elf.style.top = elfPosition.top - elfSpeed + 'px';
+                    break;
+                case 'ArrowDown':
+                    if (elfPosition.top < 550) elf.style.top = elfPosition.top + elfSpeed + 'px';
+                    break;
+                case 'ArrowLeft':
+                    if (elfPosition.left > 0) elf.style.left = elfPosition.left - elfSpeed + 'px';
+                    break;
+                case 'ArrowRight':
+                    if (elfPosition.left < 750) elf.style.left = elfPosition.left + elfSpeed + 'px';
+                    break;
+            }
+
+            // 檢查是否收集金幣
+            if (!coinCollected) {
+                let coinPosition = coin.getBoundingClientRect();
+                if (elfPosition.left < coinPosition.left + coinPosition.width &&
+                    elfPosition.left + elfPosition.width > coinPosition.left &&
+                    elfPosition.top < coinPosition.top + coinPosition.height &&
+                    elfPosition.top + elfPosition.height > coinPosition.top) {
+                    coinCollected = true;
+                    score += 10;
+                    scoreElement.textContent = "分數: " + score;
+                    coin.style.display = 'none'; // 金幣消失
+                    // 隨機出現新的金幣
+                    setTimeout(() => {
+                        coin.style.display = 'block';
+                        coin.style.left = Math.random() * (750 - 30) + 'px';
+                        coin.style.top = Math.random() * (550 - 30) + 'px';
+                        coinCollected = false;
+                    }, 1000);
+                }
+            }
+        });
+
+        // 怪獸追逐小精靈
+        function moveMonster() {
+            let elfPosition = elf.getBoundingClientRect();
+            let monsterPosition = monster.getBoundingClientRect();
+
+            let monsterX = monsterPosition.left + monsterPosition.width / 2;
+            let monsterY = monsterPosition.top + monsterPosition.height / 2;
+
+            let elfX = elfPosition.left + elfPosition.width / 2;
+            let elfY = elfPosition.top + elfPosition.height / 2;
+
+            let angle = Math.atan2(elfY - monsterY, elfX - monsterX);
+
+            let monsterNewX = monsterX + monsterSpeed * Math.cos(angle);
+            let monsterNewY = monsterY + monsterSpeed * Math.sin(angle);
+
+            monster.style.left = monsterNewX - monsterPosition.width / 2 + 'px';
+            monster.style.top = monsterNewY - monsterPosition.height / 2 + 'px';
+
+            // 檢查怪獸是否抓到小精靈
+            if (Math.abs(monsterNewX - elfX) < 25 && Math.abs(monsterNewY - elfY) < 25) {
+                alert("怪獸抓住了小精靈！遊戲結束！");
+                window.location.reload(); // 重新載入頁面，重啟遊戲
+            }
+
+            requestAnimationFrame(moveMonster);
+        }
+
+        moveMonster(); // 開始怪獸追逐的動畫
+    </script>
+
+</body>
+</html>

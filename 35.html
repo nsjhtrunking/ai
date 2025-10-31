@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小精靈遊戲</title>
+<style>
+  body {
+    background-color: black;
+    color: white;
+    text-align: center;
+    font-family: "Arial";
+  }
+
+  #gameContainer {
+    display: inline-block;
+    margin-top: 20px;
+  }
+
+  .row {
+    display: flex;
+  }
+
+  .cell {
+    width: 25px;
+    height: 25px;
+  }
+
+  .wall {
+    background-color: #1a1aff;
+  }
+
+  .dot {
+    background-color: black;
+    position: relative;
+  }
+
+  .dot::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background-color: yellow;
+    border-radius: 50%;
+    position: absolute;
+    top: 9px;
+    left: 9px;
+  }
+
+  .empty {
+    background-color: black;
+  }
+
+  .player {
+    background-color: black;
+    position: relative;
+  }
+
+  .player::after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background-color: yellow;
+    border-radius: 50%;
+    position: absolute;
+    top: 2.5px;
+    left: 2.5px;
+  }
+
+  #score {
+    font-size: 20px;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+<h1>小精靈遊戲</h1>
+<div id="gameContainer"></div>
+<div id="score">分數: 0</div>
+
+<script>
+  const map = [
+    "###################",
+    "#........#........#",
+    "#.###.###.#.###.###",
+    "#.................#",
+    "#.###.#.#####.#.###",
+    "#.....#...#...#...#",
+    "###.#####.#.#####.#",
+    "#........P........#",
+    "###################"
+  ];
+
+  const gameContainer = document.getElementById("gameContainer");
+  const scoreDisplay = document.getElementById("score");
+
+  let grid = [];
+  let playerPos = {x: 0, y: 0};
+  let score = 0;
+
+  // 建立地圖
+  function buildMap() {
+    gameContainer.innerHTML = "";
+    grid = [];
+
+    for (let y = 0; y < map.length; y++) {
+      const rowEl = document.createElement("div");
+      rowEl.classList.add("row");
+      const row = [];
+
+      for (let x = 0; x < map[y].length; x++) {
+        const cellEl = document.createElement("div");
+        cellEl.classList.add("cell");
+        const char = map[y][x];
+
+        if (char === "#") {
+          cellEl.classList.add("wall");
+        } else if (char === ".") {
+          cellEl.classList.add("dot");
+        } else if (char === "P") {
+          cellEl.classList.add("player");
+          playerPos = {x, y};
+        } else {
+          cellEl.classList.add("empty");
+        }
+
+        rowEl.appendChild(cellEl);
+        row.push(cellEl);
+      }
+
+      gameContainer.appendChild(rowEl);
+      grid.push(row);
+    }
+  }
+
+  // 移動
+  function movePlayer(dx, dy) {
+    const newX = playerPos.x + dx;
+    const newY = playerPos.y + dy;
+
+    if (map[newY][newX] === "#") return; // 撞牆
+
+    const currentCell = grid[playerPos.y][playerPos.x];
+    currentCell.className = "cell empty";
+
+    const nextCell = grid[newY][newX];
+    if (nextCell.classList.contains("dot")) {
+      score += 10;
+      scoreDisplay.textContent = "分數: " + score;
+    }
+
+    nextCell.className = "cell player";
+    playerPos = {x: newX, y: newY};
+  }
+
+  document.addEventListener("keydown", (e) => {
+    switch (e.key) {
+      case "ArrowUp": movePlayer(0, -1); break;
+      case "ArrowDown": movePlayer(0, 1); break;
+      case "ArrowLeft": movePlayer(-1, 0); break;
+      case "ArrowRight": movePlayer(1, 0); break;
+    }
+  });
+
+  buildMap();
+</script>
+</body>
+</html>

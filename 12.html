@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1e1e1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            border: 2px solid #fff;
+            background-color: #333;
+        }
+
+        #player {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 50px;
+            height: 50px;
+            background-color: blue;
+        }
+
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: yellow;
+        }
+
+        .enemy {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: red;
+        }
+
+        #scoreboard {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="player"></div>
+        <div id="bullet-container"></div>
+        <div id="enemy-container"></div>
+        <div id="scoreboard">
+            <p>金幣: <span id="coin-count">0</span></p>
+            <p>武器等級: <span id="weapon-level">1</span></p>
+            <p>防禦等級: <span id="defense-level">1</span></p>
+        </div>
+    </div>
+    
+    <script>
+        // 遊戲變數
+        let player = document.getElementById('player');
+        let bulletContainer = document.getElementById('bullet-container');
+        let enemyContainer = document.getElementById('enemy-container');
+        let coinCount = document.getElementById('coin-count');
+        let weaponLevel = document.getElementById('weapon-level');
+        let defenseLevel = document.getElementById('defense-level');
+
+        let playerPos = { x: 10, y: 350 };
+        let bullets = [];
+        let enemies = [];
+        let coins = 0;
+        let bulletSpeed = 5;
+        let enemySpeed = 1;
+        let playerHealth = 100;
+
+        // 控制方塊移動
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                playerPos.x += 10;
+                if (playerPos.x > 750) playerPos.x = 750;
+            }
+            if (event.key === 'ArrowLeft') {
+                playerPos.x -= 10;
+                if (playerPos.x < 0) playerPos.x = 0;
+            }
+            player.style.left = `${playerPos.x}px`;
+        });
+
+        // 發射子彈
+        document.addEventListener('keydown', (event) => {
+            if (event.key === ' ') {
+                let bullet = document.createElement('div');
+                bullet.classList.add('bullet');
+                bullet.style.position = 'absolute';
+                bullet.style.left = `${playerPos.x + 25}px`; // 子彈從玩家中心發射
+                bullet.style.bottom = '60px';
+                bulletContainer.appendChild(bullet);
+                bullets.push(bullet);
+            }
+        });
+
+        // 更新遊戲狀態
+        function gameLoop() {
+            // 更新子彈位置
+            bullets.forEach((bullet, index) => {
+                let bulletPos = bullet.getBoundingClientRect();
+                bullet.style.left = `${bulletPos.left + bulletSpeed}px`;
+
+                // 檢查是否碰到小怪
+                enemies.forEach((enemy, enemyIndex) => {
+                    let enemyPos = enemy.getBoundingClientRect();
+                    if (bulletPos.left < enemyPos.right && bulletPos.right > enemyPos.left &&
+                        bulletPos.top < enemyPos.bottom && bulletPos.bottom > enemyPos.top) {
+                        // 子彈擊中小怪
+                        enemy.remove();
+                        bullet.remove();
+                        enemies.splice(enemyIndex, 1);
+                        bullets.splice(index, 1);
+                        coins += 1;
+                        coinCount.innerText = coins;
+                    }
+                });
+
+                // 移除超出螢幕的子彈
+                if (bulletPos.right > 800) {
+                    bullet.remove();
+                    bullets.splice(index, 1);
+                }
+            });
+
+            // 生成小怪
+            if (Math.random() < 0.01) {
+                let enemy = document.createElement('div');
+                enemy.classList.add('enemy');
+                enemy.style.position = 'absolute';
+                enemy.style.top = '0px';
+                enemy.style.left = `${Math.random() * 750}px`;
+                enemyContainer.appendChild(enemy);
+                enemies.push(enemy);
+            }
+
+            // 更新小怪位置
+            enemies.forEach((enemy, index) => {
+                let enemyPos = enemy.getBoundingClientRect();
+                enemy.style.top = `${enemyPos.top + enemySpeed}px`;
+
+                // 檢查小怪是否碰到玩家
+                if (enemyPos.bottom >= playerPos.y && enemyPos.left < playerPos.x + 50 && enemyPos.right > playerPos.x) {
+                    playerHealth -= 10;
+                    if (playerHealth <= 0) {
+                        alert('遊戲結束！');
+                        resetGame();
+                    }
+                }
+
+                // 如果小怪離開畫面，移除
+                if (enemyPos.top > 400) {
+                    enemy.remove();
+                    enemies.splice(index, 1);
+                }
+            });
+
+            // 控制遊戲循環
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 遊戲重置
+        function resetGame() {
+            playerHealth = 100;
+            coins = 0;
+            coinCount.innerText = coins;
+            enemyContainer.innerHTML = '';
+            bulletContainer.innerHTML = '';
+            enemies = [];
+            bullets = [];
+        }
+
+        // 開始遊戲循環
+        gameLoop();
+    </script>
+</body>
+</html>

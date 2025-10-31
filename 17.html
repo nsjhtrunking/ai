@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Free Fire 進階槍戰</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #111;
+            font-family: "Microsoft JhengHei", sans-serif;
+            color: #fff;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 1200px;
+            height: 600px;
+            background: linear-gradient(135deg, #333, #444);
+            border: 3px solid #fff;
+            overflow: hidden;
+        }
+
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 50px;
+            width: 50px;
+            height: 70px;
+            background-color: #00aaff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #00f;
+            transition: transform 0.1s;
+        }
+
+        .enemy {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #ff3333;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #f00;
+        }
+
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 4px;
+            background-color: yellow;
+            border-radius: 2px;
+        }
+
+        .explosion {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #ff0, #f00, transparent);
+            border-radius: 50%;
+            animation: boom 0.4s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes boom {
+            from { transform: scale(0.5); opacity: 1; }
+            to { transform: scale(3); opacity: 0; }
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #healthBar {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border: 1px solid #fff;
+        }
+
+        #health {
+            width: 100%;
+            height: 100%;
+            background: #0f0;
+        }
+
+        #score {
+            font-size: 18px;
+        }
+
+        #weaponSelect {
+            font-size: 16px;
+        }
+
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        button {
+            background-color: #00bfff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 6px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        button:hover { background-color: #0099cc; }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="player"></div>
+        <div id="ui">
+            <div id="healthBar"><div id="health"></div></div>
+            <div id="score">得分: 0</div>
+            <div id="weaponSelect">武器: <span id="weaponName">單發</span></div>
+        </div>
+
+        <div id="startScreen">
+            <h1>🔥 Free Fire 進階槍戰 🔫</h1>
+            <button id="startBtn">開始遊戲</button>
+        </div>
+
+        <div id="gameOverScreen" style="display:none;">
+            <h1>💀 遊戲結束 💀</h1>
+            <h2 id="finalScore"></h2>
+            <button id="restartBtn">重新開始</button>
+        </div>
+    </div>
+
+    <audio id="shootSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8dc861b97a.mp3?filename=laser-shoot-81230.mp3"></audio>
+    <audio id="explosionSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6ffb6c6d2a.mp3?filename=explosion-6055.mp3"></audio>
+
+    <script>
+        const gameArea = document.getElementById("gameArea");
+        const player = document.getElementById("player");
+        const healthBar = document.getElementById("health");
+        const scoreText = document.getElementById("score");
+        const weaponName = document.getElementById("weaponName");
+        const startScreen = document.getElementById("startScreen");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const finalScore = document.getElementById("finalScore");
+
+        const shootSound = document.getElementById("shootSound");
+        const explosionSound = document.getElementById("explosionSound");
+
+        let playerPos = { x: 50, y: 50 };
+        let playerHealth = 100;
+        let score = 0;
+        let enemies = [];
+        let bullets = [];
+        let gameRunning = false;
+        let weaponType = 0; // 0=單發, 1=連發, 2=散彈
+        let fireRate = false;
+        let backgroundOffset = 0;
+
+        // 背景滾動速度
+        const backgroundSpeed = 1;
+
+        function createEnemy() {
+            const enemy = document.createElement("div");
+            enemy.classList.add("enemy");
+            enemy.style.left = 1200 + "px";
+            enemy.style.bottom = Math.random() * 550 + "px";
+            gameArea.appendChild(enemy);
+            enemies.push({ el: enemy, x: 1200, y: parseFloat(enemy.style.bottom), speed: 3 + Math.random() * 3 });
+        }
+
+        function shoot() {
+            if (fireRate) return;
+            fireRate = true;
+            shootSound.currentTime = 0;
+            shootSound.play();
+
+            if (weaponType === 0) spawnBullet(1, 0);
+            else if (weaponType === 1) {
+                spawnBullet(1, 0);
+                setTimeout(() => spawnBullet(1, 0), 100);
+                setTimeout(() => spawnBullet(1, 0), 200);
+            } else if (weaponType === 2) {
+                spawnBullet(1, 3);
+                spawnBullet(1, -3);
+                spawnBullet(1, 0);
+            }
+
+            setTimeout(() => fireRate = false, 300);
+        }
+
+        function spawnBullet(speed, angle) {
+            const bullet = document.createElement("div");
+            bullet.classList.add("bullet");
+            bullet.style.left = (playerPos.x + 50) + "px";
+            bullet.style.bottom = (playerPos.y + 35) + "px";
+            gameArea.appendChild(bullet);
+            bullets.push({ el: bullet, x: playerPos.x + 50, y: playerPos.y + 35, speed: 10, angle });
+        }
+
+        function explode(x, y) {
+            const boom = document.createElement("div");
+            boom.classList.add("explosion");
+            boom.style.left = x + "px";
+            boom.style.bottom = y + "px";
+            gameArea.appendChild(boom);
+            explosionSound.currentTime = 0;
+            explosionSound.play();
+            setTimeout(() => boom.remove(), 400);
+        }
+
+        function updateGame() {
+            if (!gameRunning) return;
+
+            // 背景滾動
+            backgroundOffset -= backgroundSpeed;
+            gameArea.style.backgroundPosition = `${backgroundOffset}px 0`;
+
+            // 移動敵人
+            enemies.forEach((enemy, i) => {
+                enemy.x -= enemy.speed;
+                enemy.el.style.left = enemy.x + "px";
+                if (enemy.x < -50) {
+                    enemy.el.remove();
+                    enemies.splice(i, 1);
+                    damagePlayer(10);
+                }
+            });
+
+            // 移動子彈
+            bullets.forEach((bullet, i) => {
+                bullet.x += bullet.speed;
+                bullet.y += bullet.angle;
+                bullet.el.style.left = bullet.x + "px";
+                bullet.el.style.bottom = bullet.y + "px";
+
+                if (bullet.x > 1200) {
+                    bullet.el.remove();
+                    bullets.splice(i, 1);
+                }
+            });
+
+            // 碰撞偵測
+            enemies.forEach((enemy, ei) => {
+                bullets.forEach((bullet, bi) => {
+                    if (bullet.x < enemy.x + 50 &&
+                        bullet.x + 10 > enemy.x &&
+                        bullet.y < enemy.y + 50 &&
+                        bullet.y + 5 > enemy.y) {
+                        explode(enemy.x, enemy.y);
+                        score += 10;
+                        scoreText.innerText = `得分: ${score}`;
+                        enemy.el.remove();
+                        bullet.el.remove();
+                        enemies.splice(ei, 1);
+                        bullets.splice(bi, 1);
+                    }
+                });
+            });
+
+            requestAnimationFrame(updateGame);
+        }
+
+        function damagePlayer(amount) {
+            playerHealth -= amount;
+            healthBar.style.width = playerHealth + "%";
+            if (playerHealth <= 0) endGame();
+        }
+
+        function movePlayer(e) {
+            if (!gameRunning) return;
+            if (e.key === "ArrowUp" && playerPos.y < 550) playerPos.y += 20;
+            if (e.key === "ArrowDown" && playerPos.y > 0) playerPos.y -= 20;
+            if (e.key === "ArrowLeft" && playerPos.x > 0) playerPos.x -= 20;
+            if (e.key === "ArrowRight" && playerPos.x < 1150) playerPos.x += 20;
+            if (e.key === " ") shoot();
+            if (e.key === "q") {
+                weaponType = (weaponType + 1) % 3;
+                weaponName.innerText = ["單發", "連發", "散彈"][weaponType];
+            }
+            player.style.left = playerPos.x + "px";
+            player.style.bottom = playerPos.y + "px";
+        }
+
+        function startGame() {
+            startScreen.style.display = "none";
+            gameRunning = true;
+            score = 0;
+            playerHealth = 100;
+            healthBar.style.width = "100%";
+            scoreText.innerText = "得分: 0";
+            enemies = [];
+            bullets = [];
+            setInterval(createEnemy, 1000);
+            updateGame();
+        }
+
+        function endGame() {
+            gameRunning = false;
+            enemies.forEach(e => e.el.remove());
+            bullets.forEach(b => b.el.remove());
+            finalScore.innerText = `你的最終得分：${score}`;
+            gameOverScreen.style.display = "flex";
+        }
+
+        document.addEventListener("keydown", movePlayer);
+        document.getElementById("startBtn").addEventListener("click", startGame);
+        document.getElementById("restartBtn").addEventListener("click", () => location.reload());
+    </script>
+</body>
+</html>
