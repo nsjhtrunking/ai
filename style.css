@@ -1,0 +1,61 @@
+/* 設定基本樣式 */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #E8F5E9; /* 抹茶色背景 */
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #A5D6A7;
+    color: white;
+}
+
+header .logo img {
+    width: 100px;
+}
+
+h1 {
+    font-size: 36px;
+    margin-top: 10px;
+}
+
+.tool-list {
+    padding: 20px;
+}
+
+.tools {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    justify-items: center;
+}
+
+.tool-item {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.tool-item:hover {
+    transform: scale(1.05);
+}
+
+.tool-item img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+.tool-item span {
+    display: block;
+    font-size: 18px;
+    color: #4CAF50;
+    margin-top: 10px;
+}

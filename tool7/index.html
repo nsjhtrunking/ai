@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具3 - 影像處理</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="../index.html">返回首頁</a>
+        <h1>影像處理</h1>
+    </header>
+    <section>
+        <p>這裡可以上傳影像並進行處理。</p>
+        <input type="file" id="fileInput" accept="image/*">
+        <img id="imagePreview" src="" alt="影像預覽" style="display:none; max-width: 100%; margin-top: 20px;">
+    </section>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = document.getElementById('imagePreview');
+                img.style.display = 'block';
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        });
+    </script>
+</body>
+</html>

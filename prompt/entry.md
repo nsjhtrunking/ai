@@ -1,0 +1,3 @@
+# Entry
+1. generate a html website homepage entrance, which contains java , css script . The entrance site preservers 20 pages link , that called PAGES named from 01.html to 20.html . The style of the site colored mainly as green tee , decorated with the smell of technology with AI .
+2. 設計一個充滿科技感的入口網站，主要色系抹茶色，網頁是由 html ,css , java所寫成的單一網頁，主要標題中文呈現南新科技中心，該頁面預留12 個分頁的連結出去，並幫我把這12個網頁命名為12個常用網頁小工具，每一個小工具都單獨一個資料夾，並且有向量縮圖呈現在入口網頁，幫我把這些架構生成，並打包成壓縮檔讓我下載解壓縮後馬上可用
