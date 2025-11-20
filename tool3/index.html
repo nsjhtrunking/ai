@@ -3,16 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工具3 - 記事本</title>
+    <title>工具4 - 計算器</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <a href="../index.html">返回首頁</a>
-        <h1>記事本</h1>
+        <h1>計算器</h1>
     </header>
     <section>
-        <textarea placeholder="請輸入文字..." rows="10" cols="30"></textarea>
+        <input type="text" id="display" disabled>
+        <div class="buttons">
+            <button onclick="appendNumber(1)">1</button>
+            <button onclick="appendNumber(2)">2</button>
+            <button onclick="appendNumber(3)">3</button>
+            <button onclick="appendNumber(4)">4</button>
+            <button onclick="appendNumber(5)">5</button>
+            <button onclick="appendNumber(6)">6</button>
+            <button onclick="appendNumber(7)">7</button>
+            <button onclick="appendNumber(8)">8</button>
+            <button onclick="appendNumber(9)">9</button>
+            <button onclick="appendNumber(0)">0</button>
+            <button onclick="clearDisplay()">C</button>
+            <button onclick="calculateResult()">=</button>
+        </div>
     </section>
+
+    <script>
+        function appendNumber(number) {
+            document.getElementById('display').value += number;
+        }
+
+        function clearDisplay() {
+            document.getElementById('display').value = '';
+        }
+
+        function calculateResult() {
+            try {
+                document.getElementById('display').value = eval(document.getElementById('display').value);
+            } catch (e) {
+                document.getElementById('display').value = '錯誤';
+            }
+        }
+    </script>
 </body>
 </html>

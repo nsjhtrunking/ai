@@ -28,11 +28,25 @@ section {
     padding: 40px;
 }
 
-textarea {
-    width: 80%;
-    height: 200px;
+input {
+    font-size: 20px;
     padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
+    width: 80%;
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+button {
+    font-size: 20px;
+    padding: 20px;
+    width: 60px;
+    margin: 5px;
     border-radius: 5px;
+    background-color: #66BB6A;
+    color: white;
+    border: none;
+}
+
+button:hover {
+    background-color: #4CAF50;
 }

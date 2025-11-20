@@ -1,8 +1,8 @@
 /* 設定基本樣式 */
 body {
     font-family: Arial, sans-serif;
-    background-color: #E8F5E9; /* 抹茶色背景 */
-    color: #333;
+    background-color: #212121; /* 暗灰色背景 */
+    color: #E0E0E0; /* 淺灰色文字 */
     margin: 0;
     padding: 0;
 }
@@ -10,8 +10,8 @@ body {
 header {
     text-align: center;
     padding: 20px;
-    background-color: #A5D6A7;
-    color: white;
+    background-color: #424242; /* 暗灰色背景 */
+    color: #E0E0E0;
 }
 
 header .logo img {
@@ -23,6 +23,17 @@ h1 {
     margin-top: 10px;
 }
 
+a {
+    text-decoration: none;
+    color: #A5D6A7; /* 淺抹茶綠文字 */
+}
+
+h2 {
+    font-size: 28px;
+    color: #A5D6A7; /* 標題文字使用抹茶綠 */
+}
+
+/* 首頁的工具列表 */
 .tool-list {
     padding: 20px;
 }
@@ -34,17 +45,19 @@ h1 {
     justify-items: center;
 }
 
+/* 單個工具項目的樣式 */
 .tool-item {
-    background-color: white;
+    background-color: #333; /* 暗色背景 */
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.7); /* 深陰影 */
     text-align: center;
-    transition: transform 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .tool-item:hover {
     transform: scale(1.05);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.9); /* 點擊效果 */
 }
 
 .tool-item img {
@@ -56,6 +69,70 @@ h1 {
 .tool-item span {
     display: block;
     font-size: 18px;
-    color: #4CAF50;
+    color: #A5D6A7; /* 淺抹茶綠文字 */
     margin-top: 10px;
+}
+
+/* 工具頁面 */
+section {
+    text-align: center;
+    padding: 40px;
+}
+
+/* 按鈕樣式 */
+button {
+    background-color: #66BB6A; /* 抹茶綠背景 */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #4CAF50; /* Hover 效果 */
+}
+
+/* 表單和輸入框 */
+textarea {
+    background-color: #333; /* 暗色背景 */
+    color: #E0E0E0; /* 淺灰色文字 */
+    border: 1px solid #A5D6A7; /* 抹茶綠邊框 */
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    width: 80%;
+    height: 200px;
+    resize: none;
+}
+
+input[type="file"] {
+    font-size: 16px;
+    padding: 10px;
+    background-color: #333;
+    color: #E0E0E0;
+    border: 1px solid #A5D6A7;
+    border-radius: 5px;
+}
+
+/* 返回首頁的連結樣式 */
+header a {
+    text-decoration: none;
+    color: #A5D6A7;
+    font-size: 16px;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+/* 設定頁面背景顏色 */
+body {
+    background-color: #212121;
+    color: #E0E0E0;
+}
+
+/* 將圖片縮放至合適的尺寸 */
+img {
+    max-width: 100%;
+    height: auto;
 }
