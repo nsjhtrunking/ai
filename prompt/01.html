@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>南新科技中心</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Microsoft JhengHei", sans-serif;
+        background: #1b1b1b;
+        color: #e0e0e0;
+    }
+
+    header {
+        padding: 40px 20px 20px;
+        text-align: center;
+        background: #222;
+        border-bottom: 2px solid #88AA77;
+    }
+
+    header h1 {
+        color: #88AA77;
+        margin: 0;
+        letter-spacing: 3px;
+    }
+
+    /* 搜尋列 */
+    .search-box {
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .search-box input {
+        width: 80%;
+        max-width: 400px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #3a3a3a;
+        background: #2a2a2a;
+        color: #e0e0e0;
+        font-size: 1rem;
+    }
+
+    /* 類別標籤 */
+    .tabs {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .tab {
+        padding: 10px 18px;
+        background: #2a2a2a;
+        border-radius: 20px;
+        border: 1px solid #3a3a3a;
+        cursor: pointer;
+        transition: 0.3s;
+        color: #e0e0e0;
+    }
+
+    .tab.active,
+    .tab:hover {
+        background: #88AA77;
+        color: #1b1b1b;
+    }
+
+    /* 卡片容器 */
+    .container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        padding: 20px 40px 60px;
+    }
+
+    /* 卡片 */
+    .card {
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        color: #e0e0e0;
+        border: 1px solid #3a3a3a;
+        transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 卡片 hover 動畫 */
+    .card:hover {
+        transform: translateY(-8px) scale(1.03);
+        border-color: #88AA77;
+        box-shadow: 0 0 18px rgba(136, 170, 119, 0.45);
+    }
+
+/* SVG 動畫 */
+.card .icon {
+    transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+/* 滑過時圖示微放大 */
+.card:hover .icon {
+    transform: scale(1.15);
+    opacity: 1;
+}
+
+/* 光暈動畫層 */
+.card::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(136,170,119,0.12), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    transform: rotate(45deg);
+}
+
+/* 滑過時光暈淡入 */
+.card:hover::before {
+    opacity: 1;
+}
+
+
+    /* SVG 圖示 */
+    .icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 12px;
+    }
+
+    .card-title {
+        color: #88AA77;
+        font-size: 1.2rem;
+        margin-bottom: 6px;
+    }
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>南新科技中心</h1>
+</header>
+
+<!-- 搜尋 -->
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="搜尋關鍵字（卡片名稱）...">
+</div>
+
+<!-- 類別標籤 -->
+<div class="tabs">
+    <div class="tab active" data-category="all">全部</div>
+    <div class="tab" data-category="系統">系統</div>
+    <div class="tab" data-category="管理">管理</div>
+    <div class="tab" data-category="工具">工具</div>
+</div>
+
+<!-- 卡片區域 -->
+<div class="container" id="cardContainer">
+
+    <!-- 以下為 12 個工具，可自行分類（data-category） -->
+
+    <a href="page1.html" class="card" data-category="系統" data-title="登入系統">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+        </svg>
+        <div class="card-title">登入系統</div>
+        <p>系統相關工具</p>
+    </a>
+
+    <a href="page2.html" class="card" data-category="管理" data-title="資料中心">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+        </svg>
+        <div class="card-title">資料中心</div>
+    </a>
+
+    <a href="page3.html" class="card" data-category="工具" data-title="測試工具">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <polygon points="12,2 22,22 2,22"></polygon>
+        </svg>
+        <div class="card-title">測試工具</div>
+    </a>
+
+    <a href="page4.html" class="card" data-category="系統" data-title="監控平台">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <path d="M12 2 L19 21 H5 Z"></path>
+        </svg>
+        <div class="card-title">監控平台</div>
+    </a>
+
+    <a href="page5.html" class="card" data-category="管理" data-title="帳號管理">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <circle cx="8" cy="8" r="4"></circle>
+            <circle cx="16" cy="16" r="4"></circle>
+        </svg>
+        <div class="card-title">帳號管理</div>
+    </a>
+
+    <a href="page6.html" class="card" data-category="工具" data-title="轉換助手">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <path d="M4 4 H20 V20 H4 Z"></path>
+        </svg>
+        <div class="card-title">轉換助手</div>
+    </a>
+
+    <a href="page7.html" class="card" data-category="系統" data-title="排程管理">
+        <svg class="icon" fill="none" stroke="#88AA77" viewBox="0 0 24 24" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+        </svg>
+        <div class="card-title">排程管理</div>
+    </a>
+
+    <a href="page8.html" class="card" data-category="管理" data-title="專案室">
+        <svg class="icon" fill="none" stroke="#88AA77" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M2 12 H22"></path>
+            <path d="M12 2 V22"></path>
+        </svg>
+        <div class="card-title">專案室</div>
+    </a>
+
+    <a href="page9.html" class="card" data-category="工具" data-title="資訊查詢">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="6"></circle>
+        </svg>
+        <div class="card-title">資訊查詢</div>
+    </a>
+
+    <a href="page10.html" class="card" data-category="管理" data-title="設備管理">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12"></rect>
+        </svg>
+        <div class="card-title">設備管理</div>
+    </a>
+
+    <a href="page11.html" class="card" data-category="工具" data-title="分析工具">
+        <svg class="icon" fill="none" stroke="#88AA77" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 4 L20 20"></path>
+            <path d="M20 4 L4 20"></path>
+        </svg>
+        <div class="card-title">分析工具</div>
+    </a>
+
+    <a href="page12.html" class="card" data-category="系統" data-title="系統日誌">
+        <svg class="icon" fill="#88AA77" viewBox="0 0 24 24">
+            <path d="M12 2 L2 22 H22 Z"></path>
+        </svg>
+        <div class="card-title">系統日誌</div>
+    </a>
+
+</div>
+
+<script>
+    const tabs = document.querySelectorAll(".tab");
+    const cards = document.querySelectorAll(".card");
+    const searchInput = document.getElementById("searchInput");
+
+    // 類別切換功能
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            tabs.forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+
+            const category = tab.getAttribute("data-category");
+            filterCards(category, searchInput.value.trim());
+        });
+    });
+
+    // 搜尋功能
+    searchInput.addEventListener("input", () => {
+        const activeCategory = document.querySelector(".tab.active").dataset.category;
+        filterCards(activeCategory, searchInput.value.trim());
+    });
+
+    function filterCards(category, keyword) {
+        cards.forEach(card => {
+            const cardCategory = card.dataset.category;
+            const title = card.dataset.title.toLowerCase();
+            const kw = keyword.toLowerCase();
+
+            const matchCategory = (category === "all" || category === cardCategory);
+            const matchKeyword = (kw === "" || title.includes(kw));
+
+            card.style.display = (matchCategory && matchKeyword) ? "block" : "none";
+        });
+    }
+</script>
+
+</body>
+</html>

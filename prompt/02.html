@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>南新科技中心</title>
+<style>
+:root{
+  --matcha:#7FB069;
+  --matcha-2:#88B26A;
+  --deep-gray:#0F1113;
+  --card-gray:#1E2124;
+  --light-gray:#BFBFBF;
+  --glass: rgba(255,255,255,0.03);
+  --accent: linear-gradient(135deg, rgba(127,176,105,0.12), rgba(136,178,106,0.06));
+  --radius:16px;
+  --glass-border: rgba(255,255,255,0.04);
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(127,176,105,0.03), transparent),
+              radial-gradient(900px 400px at 90% 80%, rgba(255,255,255,0.02), transparent),
+              var(--deep-gray);
+  color:var(--light-gray);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  padding:36px;
+}
+
+/* Header */
+.header{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin-bottom:28px;
+}
+.logo{
+  width:84px;
+  height:84px;
+  border-radius:14px;
+  background:linear-gradient(180deg,var(--matcha),var(--matcha-2));
+  box-shadow: 0 6px 20px rgba(127,176,105,0.12), inset 0 -6px 18px rgba(0,0,0,0.2);
+  display:grid;
+  place-items:center;
+  color:#08110a;
+  font-weight:700;
+  font-size:22px;
+  letter-spacing:1px;
+}
+.title{
+  display:flex;
+  flex-direction:column;
+}
+.title h1{
+  margin:0;
+  font-size:24px;
+  color:var(--light-gray);
+}
+.title p{
+  margin:4px 0 0 0;
+  color:rgba(191,191,191,0.7);
+  font-size:13px;
+}
+
+/* Controls */
+.controls{
+  margin-left:auto;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.search{
+  background:var(--card-gray);
+  border:1px solid var(--glass-border);
+  padding:8px 12px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:240px;
+}
+.search input{
+  background:transparent;
+  border:0;
+  outline:0;
+  color:var(--light-gray);
+  font-size:14px;
+  width:100%;
+}
+
+/* Grid / Cards */
+.grid{
+  display:grid;
+  gap:18px;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+}
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius);
+  padding:18px;
+  display:flex;
+  gap:14px;
+  align-items:center;
+  transition: transform .22s ease, box-shadow .22s ease;
+  cursor:pointer;
+  min-height:92px;
+}
+.card:hover{
+  transform:translateY(-6px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.6), 0 0 20px rgba(127,176,105,0.06);
+}
+
+/* SVG thumb */
+.thumb{
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+  border-radius:12px;
+  background:var(--glass);
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,0.02);
+  overflow:hidden;
+}
+.card h3{
+  margin:0;
+  font-size:16px;
+  color:var(--light-gray);
+}
+.card p{
+  margin:6px 0 0 0;
+  color:rgba(191,191,191,0.65);
+  font-size:13px;
+}
+
+/* Footer */
+.footer{
+  margin-top:24px;
+  color:rgba(191,191,191,0.5);
+  font-size:13px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* Modal / Page view */
+.page-view{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0.66), rgba(0,0,0,0.8));
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:60;
+  padding:28px;
+}
+.page-inner{
+  width:min(1100px,96%);
+  max-height:92vh;
+  overflow:auto;
+  background: linear-gradient(180deg, rgba(15,17,19,0.96), rgba(18,20,22,0.98));
+  border-radius:20px;
+  padding:28px;
+  border:1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 20px 80px rgba(0,0,0,0.7);
+}
+.page-inner h2{margin:0 0 12px 0; color:var(--matcha);}
+.close-btn{
+  margin-left:auto;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.04);
+  padding:8px 12px;
+  border-radius:12px;
+  color:var(--light-gray);
+  cursor:pointer;
+}
+
+/* Responsive tweaks */
+@media (max-width:720px){
+  .header{gap:12px;}
+  .logo{width:64px;height:64px;font-size:18px}
+  .search{min-width:160px;}
+  body{padding:18px;}
+}
+</style>
+</head>
+<body>
+  <div class="header" role="banner">
+    <div class="logo" aria-hidden="true">
+      南新
+    </div>
+    <div class="title">
+      <h1>南新科技中心</h1>
+      <p>智慧入口 · 工具集成 · 深色科技風</p>
+    </div>
+
+    <div class="controls" role="search">
+      <div class="search" title="快速搜尋">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <input id="quickSearch" placeholder="搜尋工具或頁面..." />
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="close-btn" id="themeToggle" title="切換主題">主題</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <section class="grid" id="cardGrid" aria-labelledby="gridTitle">
+      <!-- Cards generated by JS -->
+    </section>
+
+    <div class="footer">
+      <div>© <strong>南新科技中心</strong> — 入口平台</div>
+      <div>版本 1.0</div>
+    </div>
+  </main>
+
+  <!-- Page view (single-file subpages) -->
+  <div class="page-view" id="pageView" role="dialog" aria-modal="true">
+    <div class="page-inner" id="pageInner">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+        <h2 id="pageTitle">頁面</h2>
+        <button class="close-btn" id="closePage">關閉</button>
+      </div>
+      <div id="pageContent" style="color:rgba(191,191,191,0.9);line-height:1.7;">
+        <!-- content -->
+      </div>
+    </div>
+  </div>
+
+<script>
+const pages = [
+  {id:1, title:"關於我們", desc:"介紹南新科技中心的願景、任務與團隊介紹。"},
+  {id:2, title:"最新消息", desc:"活動公告、專題講座與重要通知集中展示。"},
+  {id:3, title:"課程與活動", desc:"課程報名、工作坊、講座與活動行事曆。"},
+  {id:4, title:"實驗室設備", desc:"儀器清單、使用說明及預約資訊。"},
+  {id:5, title:"預約系統", desc:"線上預約實驗室與教室的入口與操作說明。"},
+  {id:6, title:"研究成果", desc:"展示專題研究、發表論文與案例介紹。"},
+  {id:7, title:"合作夥伴", desc:"產學合作、贊助廠商與聯盟夥伴矩陣。"},
+  {id:8, title:"技術支援", desc:"常見問題、故障回報與技術文件下載。"},
+  {id:9, title:"下載專區", desc:"相關表單、工具、驅動程式與教材檔案。"},
+  {id:10, title:"教學資源", desc:"教案、教材、示範影片與教材套件。"},
+  {id:11, title:"聯絡我們", desc:"聯絡方式、地點與來訪資訊。"},
+  {id:12, title:"會員專區", desc:"會員登入、權限管理與個人化設定。"}
+];
+
+const grid = document.getElementById('cardGrid');
+
+function createSVGThumb(index){
+  // Simple vector-like SVG representing a tech glyph
+  const svg = `<svg viewBox="0 0 64 64" width="56" height="56" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+    <defs>
+      <linearGradient id="g${index}" x1="0" x2="1">
+        <stop offset="0" stop-color="#7FB069" stop-opacity="0.95"/>
+        <stop offset="1" stop-color="#88B26A" stop-opacity="0.78"/>
+      </linearGradient>
+    </defs>
+    <rect x="6" y="6" width="52" height="52" rx="8" fill="rgba(255,255,255,0.02)"/>
+    <g transform="translate(12,12)" fill="url(#g${index})">
+      <rect x="0" y="0" width="40" height="6" rx="3"/>
+      <rect x="0" y="10" width="28" height="6" rx="3"/>
+      <rect x="0" y="20" width="14" height="6" rx="3"/>
+    </g>
+  </svg>`;
+  return svg;
+}
+
+function makeCard(page){
+  const a = document.createElement('div');
+  a.className = 'card';
+  a.innerHTML = `
+    <div class="thumb">${createSVGThumb(page.id)}</div>
+    <div style="flex:1">
+      <h3>${page.title}</h3>
+      <p>${page.desc}</p>
+    </div>
+  `;
+  a.addEventListener('click', ()=> openPage(page.id));
+  return a;
+}
+
+// Render all cards
+pages.forEach(p=> grid.appendChild(makeCard(p)));
+
+// Quick search filter
+document.getElementById('quickSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  Array.from(grid.children).forEach((card, idx)=>{
+    const title = pages[idx].title.toLowerCase();
+    const desc = pages[idx].desc.toLowerCase();
+    const visible = q === '' || title.includes(q) || desc.includes(q);
+    card.style.display = visible ? 'flex' : 'none';
+  });
+});
+
+// Page view functions (single-file subpages)
+const pageView = document.getElementById('pageView');
+const pageTitle = document.getElementById('pageTitle');
+const pageContent = document.getElementById('pageContent');
+const closePageBtn = document.getElementById('closePage');
+
+function openPage(id){
+  const p = pages.find(x=>x.id===id);
+  pageTitle.textContent = p.title;
+  pageContent.innerHTML = `
+    <p style="margin-top:8px;">${p.desc}</p>
+    <hr style="opacity:0.06;margin:14px 0;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="min-width:260px;flex:1 1 320px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);">
+        <h3 style="color:var(--light-gray);margin:0 0 8px 0;">快速操作</h3>
+        <ul style="margin:0;padding-left:18px;color:rgba(191,191,191,0.8);">
+          <li>建立新項目</li>
+          <li>匯出報表</li>
+          <li>設定權限</li>
+        </ul>
+      </div>
+      <div style="flex:2 1 420px;min-width:240px;">
+        <h3 style="color:var(--light-gray);margin:0 0 8px 0;">說明</h3>
+        <p style="margin:0;color:rgba(191,191,191,0.8);">
+          這是 ${p.title} 的單頁模擬內容。因為本檔案為單一 HTML 入口，所有分頁皆為內嵌式視窗展示（hash 導覽與模擬頁面）。
+        </p>
+        <div style="margin-top:12px;">
+          <button class="close-btn" onclick="closePage()">回到入口</button>
+        </div>
+      </div>
+    </div>
+  `;
+  pageView.style.display='flex';
+  // update URL hash for shareability
+  history.pushState({page:id}, '', '#page-'+id);
+}
+
+function closePage(){
+  pageView.style.display='none';
+  history.pushState({}, '', window.location.pathname);
+}
+
+closePageBtn.addEventListener('click', closePage);
+pageView.addEventListener('click', (e)=>{
+  if(e.target === pageView) closePage();
+});
+
+// handle hash on load
+window.addEventListener('load', ()=>{
+  const h = location.hash;
+  if(h && h.startsWith('#page-')){
+    const id = parseInt(h.replace('#page-',''));
+    if(!isNaN(id)) openPage(id);
+  }
+});
+
+// simple theme toggle (demonstrative)
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  document.body.classList.toggle('alt-theme');
+  alert('主題切換（示意）');
+});
+
+// accessibility: close on ESC
+window.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') {
+    if(pageView.style.display==='flex') closePage();
+  }
+});
+</script>
+</body>
+</html>
