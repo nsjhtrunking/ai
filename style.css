@@ -40,7 +40,7 @@ h2 {
 
 .tools {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     justify-items: center;
 }
@@ -61,8 +61,8 @@ h2 {
 }
 
 .tool-item img {
-    width: 60px;
-    height: 60px;
+    width: 200px;
+    height: 200px;
     margin-bottom: 10px;
 }
 
@@ -133,6 +133,6 @@ body {
 
 /* 將圖片縮放至合適的尺寸 */
 img {
-    max-width: 100%;
+    max-width: 150%;
     height: auto;
 }
