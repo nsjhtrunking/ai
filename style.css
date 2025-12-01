@@ -133,6 +133,6 @@ body {
 
 /* 將圖片縮放至合適的尺寸 */
 img {
-    max-width: 200%;
+    max-width: 100%;
     height: auto;
 }
