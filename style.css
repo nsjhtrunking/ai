@@ -61,8 +61,8 @@ h2 {
 }
 
 .tool-item img {
-    width: 200px;
-    height: 200px;
+    width: 120px;
+    height: 120px;
     margin-bottom: 10px;
 }
 
@@ -133,6 +133,6 @@ body {
 
 /* 將圖片縮放至合適的尺寸 */
 img {
-    max-width: 150%;
+    max-width: 200%;
     height: auto;
 }
