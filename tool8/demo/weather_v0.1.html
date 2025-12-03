@@ -1,0 +1,493 @@
+
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>互動天氣穿搭小學生 - v0.1</title>
+<style>
+  :root{
+    --bg:#f0f6ff;
+    --card:#ffffff;
+    --accent:#3b82f6;
+    --muted:#6b7280;
+    --glass: rgba(255,255,255,0.6);
+  }
+  html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans CJK TC", "PingFang TC", "Hiragino Sans GB", "Microsoft JhengHei", Arial; background: linear-gradient(180deg,#e6f0ff 0%, #f8fbff 100%);}
+  .app{
+    display:flex;
+    gap:16px;
+    padding:18px;
+    max-width:1200px;
+    margin:0 auto;
+    box-sizing:border-box;
+  }
+  /* Left sidebar */
+  .sidebar{
+    width:320px;
+    min-width:260px;
+    background:var(--card);
+    border-radius:12px;
+    padding:16px;
+    box-shadow:0 6px 18px rgba(16,24,40,0.06);
+    height:calc(100vh - 36px);
+    box-sizing:border-box;
+    overflow:auto;
+  }
+  .sidebar h2{margin:4px 0 12px 0;font-size:18px}
+  .location-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .location-row input{flex:1;padding:8px;border-radius:8px;border:1px solid #e6eefc;}
+  .btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
+  .forecast-group{margin-top:12px}
+  .forecast-card{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;margin-bottom:8px;border:1px dashed #eef6ff}
+  .forecast-card small{color:var(--muted)}
+  .version{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+
+  /* Main view */
+  .main{
+    flex:1;
+    background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.6));
+    border-radius:12px;
+    padding:20px;
+    height:calc(100vh - 36px);
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    overflow:hidden;
+  }
+  .top-row{display:flex;justify-content:space-between;align-items:center}
+  .now-card{display:flex;gap:12px;align-items:center}
+  .stat{background:var(--glass);padding:10px;border-radius:10px;min-width:110px;text-align:center;backdrop-filter: blur(6px);box-shadow:0 4px 10px rgba(50,60,90,0.04)}
+  .stat h3{margin:0;font-size:20px}
+  .stat p{margin:2px 0 0 0;color:var(--muted)}
+  .canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(180deg,#fff 0%, #f7fbff 100%);border:1px solid rgba(59,130,246,0.06)}
+  .controls{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,0.8);padding:8px;border-radius:8px;display:flex;gap:8px;box-shadow:0 6px 20px rgba(20,30,70,0.06)}
+  .hint{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,0.6);color:white;padding:8px;border-radius:8px;font-size:13px}
+  /* character */
+  .stage{width:320px;height:480px;touch-action:none;display:flex;align-items:center;justify-content:center}
+  svg.character{width:260px;height:auto;pointer-events:none}
+  .legend{font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
+
+  /* responsive */
+  @media (max-width:900px){
+    .app{flex-direction:column;padding:12px}
+    .sidebar{width:100%;height:auto;order:2}
+    .main{order:1;height:auto}
+    .stage{width:260px;height:420px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" aria-label="控制側欄">
+    <h2>地點與預報</h2>
+    <div class="location-row">
+      <input id="placeInput" placeholder="輸入城市名稱或經緯度 (e.g. Taipei)"/>
+      <button class="btn" id="findBtn">查詢</button>
+    </div>
+    <div>
+      <button id="geoBtn" class="btn" style="width:100%;">使用裝置位置</button>
+    </div>
+
+    <div class="forecast-group" id="threeDay">
+      <h3>未來 3 天</h3>
+      <div id="threeList">--</div>
+    </div>
+
+    <div class="forecast-group" id="sevenDay">
+      <h3>未來 7 天</h3>
+      <div id="sevenList">--</div>
+    </div>
+
+    <div class="version">版本：v0.1</div>
+  </aside>
+
+  <main class="main">
+    <div class="top-row">
+      <div class="now-card">
+        <div class="stat">
+          <h3 id="temp">--°C</h3>
+          <p>溫度</p>
+        </div>
+        <div class="stat">
+          <h3 id="humidity">--%</h3>
+          <p>濕度</p>
+        </div>
+        <div class="stat">
+          <h3 id="weatherText">--</h3>
+          <p>現況</p>
+        </div>
+      </div>
+      <div>
+        <small id="locName" style="color:var(--muted)"></small>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <div class="stage" id="stage">
+        <!-- Cute student SVG. Parts have IDs for dynamic clothing changes -->
+        <svg class="character" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- head -->
+          <circle cx="100" cy="60" r="32" fill="#ffd9b3"/>
+          <!-- hair -->
+          <path d="M70 42c8-18 60-24 68 4v6c0 0-6-12-34-10-18 1-34 8-34 8z" fill="#2d2d2d"/>
+          <!-- body base -->
+          <rect id="shirt" x="56" y="96" width="88" height="110" rx="14" fill="#8fb7ff"/>
+          <!-- collar -->
+          <path id="collar" d="M80 96 q20 18 40 0" fill="#fff" opacity="0.9"/>
+          <!-- arms -->
+          <rect x="36" y="110" width="20" height="70" rx="10" fill="#ffd9b3"/>
+          <rect x="144" y="110" width="20" height="70" rx="10" fill="#ffd9b3"/>
+          <!-- legs -->
+          <rect x="78" y="210" width="22" height="90" rx="8" fill="#2b3a67"/>
+          <rect x="100" y="210" width="22" height="90" rx="8" fill="#2b3a67"/>
+          <!-- shoes -->
+          <ellipse cx="89" cy="305" rx="12" ry="6" fill="#111"/>
+          <ellipse cx="111" cy="305" rx="12" ry="6" fill="#111"/>
+          <!-- umbrella (hidden by default) -->
+          <g id="umbrella" style="display:none" transform="translate(10,0)">
+            <path d="M150 70 q-20 -10 -40 0 q-20 -10 -40 0 q-20 -10 -40 0" fill="#ff6b6b" opacity="0.95"/>
+            <rect x="136" y="70" width="4" height="140" fill="#6b7280"/>
+          </g>
+          <!-- coat overlay (hidden default) -->
+          <rect id="coat" x="48" y="96" width="104" height="130" rx="14" fill="#cc6b6b" opacity="0" />
+          <!-- scarf (hidden default) -->
+          <rect id="scarf" x="70" y="130" width="60" height="14" rx="6" fill="#ffcf66" opacity="0"/>
+          <!-- sunglasses (hidden default) -->
+          <rect id="sunglass" x="76" y="50" width="48" height="10" rx="4" fill="#111" opacity="0"/>
+        </svg>
+      </div>
+
+      <div class="controls" aria-hidden="true">
+        <button class="btn" id="resetView">重設視圖</button>
+        <button class="btn" id="zoomIn" style="background:#10b981">+</button>
+        <button class="btn" id="zoomOut" style="background:#ef4444">-</button>
+      </div>
+
+      <div class="hint" id="hint">拖曳或縮放（滑鼠/手勢）檢視穿搭</div>
+    </div>
+
+    <div class="legend">提示：點選左側或使用裝置位置查詢。學生穿搭會依天氣自動變化。</div>
+  </main>
+</div>
+
+<script>
+/* -------------------------
+  Utility & Weather fetching
+   Using Open-Meteo (no API key)
+   Docs: https://open-meteo.com/
+   This app:
+    - gets geolocation
+    - queries open-meteo for current + daily + hourly humidity
+    - maps weathercode -> text
+--------------------------*/
+const stage = document.getElementById('stage');
+const tempEl = document.getElementById('temp');
+const humidityEl = document.getElementById('humidity');
+const weatherTextEl = document.getElementById('weatherText');
+const threeList = document.getElementById('threeList');
+const sevenList = document.getElementById('sevenList');
+const locName = document.getElementById('locName');
+const placeInput = document.getElementById('placeInput');
+const findBtn = document.getElementById('findBtn');
+const geoBtn = document.getElementById('geoBtn');
+
+let currentLat = 25.0330, currentLon = 121.5654; // default Taipei
+let currentName = 'Taipei';
+
+// map weathercode to simple text and categories
+const weatherCodeMap = {
+  0: ['晴朗', 'clear'],
+  1: ['主要晴朗', 'mainly_clear'],
+  2: ['多雲', 'partly_cloudy'],
+  3: ['陰天', 'overcast'],
+  45: ['霧或薄霧', 'fog'],
+  48: ['凝結霜', 'depositing_rime_fog'],
+  51: ['輕微毛毛雨', 'drizzle_light'],
+  53: ['中等毛毛雨', 'drizzle_moderate'],
+  55: ['強毛毛雨', 'drizzle_dense'],
+  56: ['輕微冰冷毛毛雨', 'freezing_drizzle_light'],
+  57: ['強冰冷毛毛雨', 'freezing_drizzle_dense'],
+  61: ['小雨', 'rain_light'],
+  63: ['中雨', 'rain_moderate'],
+  65: ['大雨', 'rain_heavy'],
+  66: ['輕微凍雨', 'freezing_rain_light'],
+  67: ['強凍雨', 'freezing_rain_heavy'],
+  71: ['小雪', 'snow_light'],
+  73: ['中雪', 'snow_moderate'],
+  75: ['大雪', 'snow_heavy'],
+  80: ['陣雨', 'rain_showers'],
+  81: ['強陣雨', 'rain_showers_heavy'],
+  82: ['暴雨型陣雨', 'rain_showers_violent'],
+  95: ['雷暴', 'thunderstorm'],
+  96: ['雷暴與輕微冰雹', 'thunderstorm_hail_light'],
+  99: ['雷暴與冰雹', 'thunderstorm_hail_heavy']
+};
+
+function codeToText(code){
+  return weatherCodeMap[code] ? weatherCodeMap[code][0] : '未知天氣';
+}
+function codeCategory(code){
+  return weatherCodeMap[code] ? weatherCodeMap[code][1] : 'unknown';
+}
+
+// fetch by lat lon
+async function fetchWeather(lat, lon){
+  // request daily for 7 days + current + hourly humidity and weathercode
+  const params = new URLSearchParams({
+    latitude: lat,
+    longitude: lon,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Taipei',
+    current_weather: 'true',
+    hourly: 'relativehumidity_2m,weathercode',
+    daily: 'temperature_2m_max,temperature_2m_min,weathercode',
+    forecast_days: 7
+  });
+  const url = 'https://api.open-meteo.com/v1/forecast?' + params.toString();
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+    return data;
+  }catch(e){
+    console.error(e);
+    alert('無法取得天氣資料，請稍後再試');
+    return null;
+  }
+}
+
+function nearestHourlyHumidity(data){
+  if(!data.hourly || !data.hourly.time) return null;
+  const times = data.hourly.time;
+  const hums = data.hourly.relativehumidity_2m;
+  const nowISO = data.current_weather.time;
+  let idx = times.indexOf(nowISO);
+  if(idx === -1){ // fallback: nearest by time
+    let nearest = 0; let mindiff=1e9;
+    const now = new Date(nowISO).getTime();
+    for(let i=0;i<times.length;i++){
+      const t = new Date(times[i]).getTime();
+      const d = Math.abs(t-now);
+      if(d < mindiff){ mindiff=d; nearest=i;}
+    }
+    idx = nearest;
+  }
+  return hums[idx];
+}
+
+function renderCharacterByWeather(code, tempC){
+  const cat = codeCategory(code);
+  const umbrella = document.getElementById('umbrella');
+  const coat = document.getElementById('coat');
+  const scarf = document.getElementById('scarf');
+  const sunglass = document.getElementById('sunglass');
+  const shirt = document.getElementById('shirt');
+
+  // reset
+  umbrella.style.display = 'none';
+  coat.style.opacity = 0;
+  scarf.style.opacity = 0;
+  sunglass.style.opacity = 0;
+  // set default shirt color
+  shirt.setAttribute('fill', '#8fb7ff');
+
+  if(cat.includes('rain') || cat.includes('drizzle') || cat.includes('thunderstorm')){
+    umbrella.style.display = 'block';
+    coat.style.opacity = 0.98;
+    coat.setAttribute('fill','#6b7280');
+    scarf.style.opacity = 0;
+  } else if(cat.includes('snow') || cat.includes('freezing') || tempC <= 10){
+    coat.style.opacity = 0.98;
+    coat.setAttribute('fill','#4b5563');
+    scarf.style.opacity = 1;
+    scarf.setAttribute('fill','#ffcf66');
+  } else if(cat.includes('clear')){
+    sunglass.style.opacity = 1;
+    shirt.setAttribute('fill','#ffd166');
+  } else if(cat.includes('cloud') || cat.includes('overcast')){
+    shirt.setAttribute('fill','#9fb4c8');
+  } else {
+    shirt.setAttribute('fill','#8fb7ff');
+  }
+}
+
+/* UI render */
+function showNow(current, humidity){
+  tempEl.innerText = Math.round(current.temperature) + '°C';
+  humidityEl.innerText = (humidity !== null ? Math.round(humidity) : '--') + '%';
+  weatherTextEl.innerText = codeToText(current.weathercode);
+  renderCharacterByWeather(current.weathercode, current.temperature);
+}
+
+function renderDailyList(daily){
+  // daily.time[], daily.temperature_2m_max[], temperature_2m_min[], weathercode[]
+  threeList.innerHTML = '';
+  sevenList.innerHTML = '';
+  const n = Math.min(daily.time.length, 7);
+  const today = new Date().toLocaleDateString();
+  for(let i=0;i<n;i++){
+    const d = daily.time[i];
+    const max = Math.round(daily.temperature_2m_max[i]);
+    const min = Math.round(daily.temperature_2m_min[i]);
+    const wc = daily.weathercode[i];
+    const html = `<div class="forecast-card">
+      <div>
+        <div><strong>${d}</strong></div>
+        <small>${codeToText(wc)}</small>
+      </div>
+      <div style="text-align:right">
+        <div>${max}° / ${min}°</div>
+        <small>${i===0?'今天':(i===1?'明天':('第'+(i+1)+'天'))}</small>
+      </div>
+    </div>`;
+    if(i<3) threeList.innerHTML += html;
+    sevenList.innerHTML += html;
+  }
+}
+
+/* Geocoding simple via open-meteo's geocoding */
+async function geocodePlace(q){
+  const url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=5&language=zh';
+  const res = await fetch(url);
+  const data = await res.json();
+  if(data && data.results && data.results.length>0){
+    return data.results[0]; // take top
+  }
+  return null;
+}
+
+/* Main flow */
+async function updateWeatherFor(lat, lon, name){
+  locName.innerText = name ? name : `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  const data = await fetchWeather(lat, lon);
+  if(!data) return;
+  const hum = nearestHourlyHumidity(data);
+  if(data.current_weather){
+    showNow(data.current_weather, hum);
+  }
+  if(data.daily){
+    renderDailyList(data.daily);
+  }
+}
+
+/* interactions */
+findBtn.addEventListener('click', async ()=>{
+  const q = placeInput.value.trim();
+  if(!q) return alert('請輸入地點名稱或經緯度');
+  // try lat,lon
+  if(/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(q)){
+    const parts = q.split(',').map(s=>parseFloat(s.trim()));
+    currentLat = parts[0]; currentLon = parts[1]; currentName = q;
+    updateWeatherFor(currentLat, currentLon, currentName);
+  } else {
+    const geo = await geocodePlace(q);
+    if(!geo) return alert('找不到地點，請改試其他關鍵字');
+    currentLat = geo.latitude; currentLon = geo.longitude;
+    currentName = (geo.name + (geo.admin1 ? (', '+geo.admin1):'')) + (geo.country?(', '+geo.country):'');
+    updateWeatherFor(currentLat, currentLon, currentName);
+  }
+});
+
+geoBtn.addEventListener('click', ()=>{
+  if(!navigator.geolocation) return alert('瀏覽器不支援地理位置');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    currentLat = pos.coords.latitude; currentLon = pos.coords.longitude;
+    currentName = '裝置位置';
+    updateWeatherFor(currentLat, currentLon, currentName);
+  }, err=>{
+    alert('無法存取位置 (請允許定位權限)');
+  }, {enableHighAccuracy:true, timeout:10000});
+});
+
+/* initial load */
+updateWeatherFor(currentLat, currentLon, 'Taipei (預設)');
+
+/* ---------- Canvas pan & zoom (pointer & touch) ---------- */
+const canvasWrap = document.getElementById('canvasWrap');
+let scale = 1, originX = 0, originY = 0;
+let isPanning = false, startX=0, startY=0;
+function applyTransform(){
+  stage.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
+}
+
+/* mouse wheel zoom (desktop) */
+canvasWrap.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const delta = -e.deltaY * 0.001;
+  const newScale = Math.min(3, Math.max(0.5, scale * (1+delta)));
+  scale = newScale;
+  applyTransform();
+}, {passive:false});
+
+/* mouse drag (desktop left-button) */
+canvasWrap.addEventListener('pointerdown', (e)=>{
+  if(e.pointerType === 'mouse' && e.button!==0) return;
+  isPanning = true;
+  startX = e.clientX - originX;
+  startY = e.clientY - originY;
+  canvasWrap.setPointerCapture(e.pointerId);
+});
+canvasWrap.addEventListener('pointermove', (e)=>{
+  if(!isPanning) return;
+  originX = e.clientX - startX;
+  originY = e.clientY - startY;
+  applyTransform();
+});
+canvasWrap.addEventListener('pointerup', (e)=>{
+  isPanning = false;
+  try{ canvasWrap.releasePointerCapture(e.pointerId);}catch(e){}
+});
+
+/* touch pinch detection */
+let lastTouchDist = null, lastMid = null;
+canvasWrap.addEventListener('touchstart', (e)=>{
+  if(e.touches.length === 2){
+    lastTouchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    lastMid = {x:(e.touches[0].clientX+e.touches[1].clientX)/2, y:(e.touches[0].clientY+e.touches[1].clientY)/2};
+  } else if(e.touches.length === 1){
+    isPanning = true;
+    startX = e.touches[0].clientX - originX;
+    startY = e.touches[0].clientY - originY;
+  }
+});
+canvasWrap.addEventListener('touchmove', (e)=>{
+  e.preventDefault();
+  if(e.touches.length === 2){
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    const mid = {x:(e.touches[0].clientX+e.touches[1].clientX)/2, y:(e.touches[0].clientY+e.touches[1].clientY)/2};
+    const scaleFactor = d / lastTouchDist;
+    scale = Math.min(3, Math.max(0.5, scale * scaleFactor));
+    // adjust origin to keep mid in place
+    originX = originX - (mid.x - lastMid.x);
+    originY = originY - (mid.y - lastMid.y);
+    lastTouchDist = d; lastMid = mid;
+    applyTransform();
+  } else if(e.touches.length === 1 && isPanning){
+    originX = e.touches[0].clientX - startX;
+    originY = e.touches[0].clientY - startY;
+    applyTransform();
+  }
+},{passive:false});
+canvasWrap.addEventListener('touchend', (e)=>{
+  if(e.touches.length<2){ lastTouchDist = null; lastMid=null; }
+  if(e.touches.length === 0) isPanning = false;
+});
+
+/* zoom buttons */
+document.getElementById('zoomIn').addEventListener('click', ()=>{
+  scale = Math.min(3, scale * 1.15); applyTransform();
+});
+document.getElementById('zoomOut').addEventListener('click', ()=>{
+  scale = Math.max(0.5, scale / 1.15); applyTransform();
+});
+document.getElementById('resetView').addEventListener('click', ()=>{
+  scale=1; originX=0; originY=0; applyTransform();
+});
+
+/* single-tap select on mobile to show detail (example) */
+stage.addEventListener('click', ()=>{
+  alert('學生穿搭會依天氣自動變化（晴天墨鏡、雨天雨傘、冷天外套）。');
+});
+</script>
+</body>
+</html>
