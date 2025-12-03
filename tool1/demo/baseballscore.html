@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>棒球賽事紀錄 - v0.1</title>
+    <style>
+        /* CSS for Bright UI and Layout */
+        :root {
+            --primary-color: #007bff; /* Blue */
+            --secondary-color: #28a745; /* Green */
+            --background-color: #f8f9fa; /* Light Gray */
+            --card-background: #ffffff; /* White */
+            --text-color: #212529; /* Dark Gray */
+            --border-color: #ced4da;
+            --header-bg: #e9ecef;
+            --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow: hidden; /* Important for drag/zoom */
+        }
+
+        /* Main Container for Zoom/Pan */
+        #viewport {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        #content {
+            transform-origin: 0 0;
+            padding: 20px;
+            box-sizing: border-box;
+            min-width: 100%;
+            min-height: 100%;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.5rem; /* Mobile friendly size */
+        }
+
+        main {
+            padding-top: 80px; /* Offset for fixed header */
+        }
+
+        /* Form/Input Styles */
+        .card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #1e7e34;
+        }
+
+        /* Player List & Scoreboard */
+        #playerList, #scoreBoard {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        #playerList li {
+            background-color: var(--header-bg);
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            main {
+                max-width: 900px;
+                margin: 0 auto;
+                padding-top: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚾ 棒球賽事紀錄網頁 v0.1</h1>
+    </header>
+
+    <div id="viewport">
+        <div id="content">
+            <main>
+                <div class="card">
+                    <h2>📝 球員資訊輸入</h2>
+                    <div class="input-group">
+                        <label for="playerName">球員姓名：</label>
+                        <input type="text" id="playerName" placeholder="例如：王小明">
+                    </div>
+                    <button onclick="addPlayer()">加入球員</button>
+                    
+                    <h3>已登錄球員</h3>
+                    <ul id="playerList">
+                        </ul>
+                </div>
+
+                <div class="card">
+                    <h2>🏟️ 比賽紀錄</h2>
+                    <div class="input-group">
+                        <label for="currentInning">目前局數 (Inning)：</label>
+                        <input type="number" id="currentInning" value="1" min="1" max="9" onchange="updateInning()">
+                    </div>
+                    
+                    <h3>比分紀錄</h3>
+                    <div class="input-group">
+                        <label>主隊分數：<span id="homeScoreDisplay" class="score-display">0</span></label>
+                        <button onclick="changeScore('home', 1)">主隊 +1</button>
+                    </div>
+                    <div class="input-group">
+                        <label>客隊分數：<span id="awayScoreDisplay" class="score-display">0</span></label>
+                        <button onclick="changeScore('away', 1)">客隊 +1</button>
+                    </div>
+
+                    <h3>目前局數：<span id="inningDisplay" class="score-display">1</span> 局</h3>
+                </div>
+                
+                <p style="text-align: center; margin-top: 30px; color: #6c757d;">提示：點擊或拖曳此頁面以移動，電腦可使用滾輪縮放。</p>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Data Store
+        let players = [];
+        let homeScore = 0;
+        let awayScore = 0;
+        let currentInning = 1;
+
+        // Player Management
+        function addPlayer() {
+            const input = document.getElementById('playerName');
+            const name = input.value.trim();
+
+            if (name && !players.includes(name)) {
+                players.push(name);
+                input.value = '';
+                renderPlayerList();
+                console.log(`Player added: ${name}`);
+            } else if (players.includes(name)) {
+                alert('該球員已登錄！');
+            } else {
+                alert('請輸入球員姓名！');
+            }
+        }
+
+        function renderPlayerList() {
+            const list = document.getElementById('playerList');
+            list.innerHTML = '';
+            players.forEach(name => {
+                const li = document.createElement('li');
+                li.innerHTML = `${name} <button onclick="removePlayer('${name}')" style="background-color: #dc3545;">移除</button>`;
+                list.appendChild(li);
+            });
+        }
+
+        function removePlayer(nameToRemove) {
+            players = players.filter(name => name !== nameToRemove);
+            renderPlayerList();
+            console.log(`Player removed: ${nameToRemove}`);
+        }
+
+        // Score/Inning Management
+        function changeScore(team, amount) {
+            if (team === 'home') {
+                homeScore += amount;
+                if (homeScore < 0) homeScore = 0;
+                document.getElementById('homeScoreDisplay').textContent = homeScore;
+                console.log(`Home score: ${homeScore}`);
+            } else if (team === 'away') {
+                awayScore += amount;
+                if (awayScore < 0) awayScore = 0;
+                document.getElementById('awayScoreDisplay').textContent = awayScore;
+                console.log(`Away score: ${awayScore}`);
+            }
+        }
+
+        function updateInning() {
+            const input = document.getElementById('currentInning');
+            const newInning = parseInt(input.value);
+            if (newInning >= 1) {
+                currentInning = newInning;
+            } else {
+                currentInning = 1;
+                input.value = 1;
+            }
+            document.getElementById('inningDisplay').textContent = currentInning;
+            console.log(`Current Inning: ${currentInning}`);
+        }
+        
+        // --- Interactive Drag and Zoom Functionality (The complex part) ---
+
+        const viewport = document.getElementById('viewport');
+        const content = document.getElementById('content');
+        let scale = 1;
+        let panX = 0;
+        let panY = 0;
+
+        // Apply transform to content
+        function applyTransform() {
+            content.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        }
+
+        // --- Mouse/Desktop Handling ---
+        let isDragging = false;
+        let startX, startY;
+        let lastPanX, lastPanY;
+
+        viewport.addEventListener('mousedown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
+                return; // Ignore drag start on interactive elements
+            }
+            isDragging = true;
+            viewport.style.cursor = 'grabbing';
+            startX = e.clientX;
+            startY = e.clientY;
+            lastPanX = panX;
+            lastPanY = panY;
+            e.preventDefault(); // Prevents image dragging/text selection
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            panX = lastPanX + dx;
+            panY = lastPanY + dy;
+            
+            applyTransform();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            viewport.style.cursor = 'grab';
+        });
+
+        // Mouse Wheel Zoom
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY * -0.01; // Scroll direction
+            const newScale = Math.min(Math.max(0.5, scale + delta), 3.0); // Limit scale 0.5 to 3.0
+            
+            // Calculate point to zoom around (mouse position relative to viewport)
+            const rect = viewport.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Adjust panX and panY to keep the mouse point fixed during zoom
+            const scaleFactor = newScale / scale;
+            panX = mouseX - (mouseX - panX) * scaleFactor;
+            panY = mouseY - (mouseY - panY) * scaleFactor;
+
+            scale = newScale;
+            applyTransform();
+        });
+
+        // --- Touch/Mobile Handling ---
+        let touchStartDist = -1;
+        let touchStartX, touchStartY;
+        let lastPanXTouch, lastPanYTouch;
+
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                // Single touch (Drag)
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
+                    return; // Allow native interaction on form elements
+                }
+                e.preventDefault();
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                lastPanXTouch = panX;
+                lastPanYTouch = panY;
+            } else if (e.touches.length === 2) {
+                // Two touches (Zoom/Pan)
+                e.preventDefault();
+                touchStartDist = getDistance(e.touches[0], e.touches[1]);
+                
+                // Set initial pan for two-finger drag
+                touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                touchStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                lastPanXTouch = panX;
+                lastPanYTouch = panY;
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && touchStartDist > 0) {
+                // Two-finger: Zoom and Pan
+                e.preventDefault();
+                const newDist = getDistance(e.touches[0], e.touches[1]);
+                const scaleRatio = newDist / touchStartDist;
+                
+                const newScale = Math.min(Math.max(0.5, scale * scaleRatio), 3.0);
+
+                // Pan calculation for two-finger drag
+                const touchMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const touchMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                
+                const dx = touchMidX - touchStartX;
+                const dy = touchMidY - touchStartY;
+                
+                // Adjust pan to center on the midpoint between touches
+                const rect = viewport.getBoundingClientRect();
+                const viewportMidX = touchMidX - rect.left;
+                const viewportMidY = touchMidY - rect.top;
+
+                const scaleFactor = newScale / scale;
+                panX = viewportMidX - (viewportMidX - lastPanXTouch) * scaleFactor + dx;
+                panY = viewportMidY - (viewportMidY - lastPanYTouch) * scaleFactor + dy;
+                
+                scale = newScale;
+                touchStartDist = newDist; // Update start distance for continuous scaling
+                lastPanXTouch = panX; // Update last pan for next move
+                lastPanYTouch = panY;
+                touchStartX = touchMidX;
+                touchStartY = touchMidY;
+                
+                applyTransform();
+
+            } else if (e.touches.length === 1 && touchStartDist < 0) {
+                // Single finger: Drag (Pan only)
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
+                    return; // Allow scrolling/interaction on form elements
+                }
+                e.preventDefault();
+
+                const dx = e.touches[0].clientX - touchStartX;
+                const dy = e.touches[0].clientY - touchStartY;
+                
+                panX = lastPanXTouch + dx;
+                panY = lastPanYTouch + dy;
+
+                applyTransform();
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchend', (e) => {
+            touchStartDist = -1;
+        });
+
+        function getDistance(t1, t2) {
+            return Math.sqrt(Math.pow(t2.clientX - t1.clientX, 2) + Math.pow(t2.clientY - t1.clientY, 2));
+        }
+
+        // Initialize state
+        window.onload = function() {
+            updateInning();
+            // Initial call to set the transform (scale=1, pan=0)
+            applyTransform(); 
+        }
+
+    </script>
+</body>
+</html>
