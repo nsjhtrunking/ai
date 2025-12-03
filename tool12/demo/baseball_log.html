@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>棒球比賽紀錄 v0.1</title>
+
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: #f7f7f7;
+        font-family: Arial, sans-serif;
+    }
+
+    #app {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        touch-action: none;
+    }
+
+    /* UI 區塊 */
+    #playerInput {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+
+    #playerInput input {
+        font-size: 16px;
+        padding: 5px 8px;
+    }
+
+    #inningGrid {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .inning {
+        background: white;
+        padding: 25px;
+        text-align: center;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        font-size: 20px;
+        user-select: none;
+    }
+
+    .popup {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 30px rgba(0,0,0,0.35);
+        z-index: 20;
+        display: none;
+    }
+
+    .popup button {
+        display: block;
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px;
+        font-size: 18px;
+        border-radius: 6px;
+        border: none;
+        background: #4a90e2;
+        color: white;
+    }
+
+    .mask {
+        display: none;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0; left: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 15;
+    }
+</style>
+</head>
+
+<body>
+<div id="app">
+    <div id="playerInput">
+        球員姓名：<input id="playerName" type="text" placeholder="輸入姓名">
+    </div>
+
+    <div id="inningGrid">
+        <div class="inning" data-id="1">第 1 局</div>
+        <div class="inning" data-id="2">第 2 局</div>
+        <div class="inning" data-id="3">第 3 局</div>
+        <div class="inning" data-id="4">第 4 局</div>
+        <div class="inning" data-id="5">第 5 局</div>
+        <div class="inning" data-id="6">第 6 局</div>
+        <div class="inning" data-id="7">第 7 局</div>
+        <div class="inning" data-id="8">第 8 局</div>
+        <div class="inning" data-id="9">第 9 局</div>
+    </div>
+
+    <div class="mask" id="mask"></div>
+
+    <div class="popup" id="popup">
+        <div id="popupTitle" style="font-size:22px;margin-bottom:10px;"></div>
+        <button onclick="selectAction('安打')">安打</button>
+        <button onclick="selectAction('出局')">出局</button>
+        <button onclick="selectAction('保送')">保送</button>
+        <button onclick="selectAction('取消')">取消</button>
+    </div>
+</div>
+
+<script>
+/* 變數 */
+let scale = 1.0;
+let originX = 0;
+let originY = 0;
+let isDragging = false;
+let lastX = 0, lastY = 0;
+let touchDistance = 0;
+
+const app = document.getElementById("app");
+const popup = document.getElementById("popup");
+const mask = document.getElementById("mask");
+let currentInning = null;
+
+/* --- 彈窗邏輯 --- */
+document.querySelectorAll(".inning").forEach(el => {
+    el.addEventListener("click", () => {
+        currentInning = el.dataset.id;
+        document.getElementById("popupTitle").innerText = `第 ${currentInning} 局選擇項目`;
+        popup.style.display = "block";
+        mask.style.display = "block";
+    });
+});
+
+mask.onclick = () => {
+    popup.style.display = "none";
+    mask.style.display = "none";
+};
+
+function selectAction(action) {
+    if (action !== "取消") {
+        alert(`第 ${currentInning} 局紀錄：${action}`);
+    }
+    popup.style.display = "none";
+    mask.style.display = "none";
+}
+
+/* --- 滑鼠拖曳及縮放 --- */
+app.addEventListener("mousedown", e => {
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+});
+
+app.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+    originX += (e.clientX - lastX);
+    originY += (e.clientY - lastY);
+    lastX = e.clientX;
+    lastY = e.clientY;
+    updateTransform();
+});
+
+app.addEventListener("mouseup", () => isDragging = false);
+app.addEventListener("mouseleave", () => isDragging = false);
+
+app.addEventListener("wheel", e => {
+    e.preventDefault();
+    scale += e.deltaY * -0.001;
+    scale = Math.min(Math.max(0.5, scale), 2.5);
+    updateTransform();
+});
+
+/* --- 手勢：單指拖曳、雙指縮放 --- */
+app.addEventListener("touchstart", e => {
+    if (e.touches.length === 1) {
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+    }
+    if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchDistance = Math.sqrt(dx*dx + dy*dy);
+    }
+});
+
+app.addEventListener("touchmove", e => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+        const x = e.touches[0].clientX;
+        const y = e.touches[0].clientY;
+        originX += (x - lastX);
+        originY += (y - lastY);
+        lastX = x;
+        lastY = y;
+    }
+    if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const newDist = Math.sqrt(dx*dx + dy*dy);
+        scale += (newDist - touchDistance) * 0.003;
+        scale = Math.min(Math.max(0.5, scale), 2.5);
+        touchDistance = newDist;
+    }
+    updateTransform();
+}, { passive: false });
+
+function updateTransform() {
+    document.getElementById("inningGrid").style.transform =
+        `translate(${originX}px, ${originY}px) scale(${scale})`;
+}
+</script>
+
+</body>
+</html>

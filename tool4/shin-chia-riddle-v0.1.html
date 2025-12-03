@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v0.1 - 新嘉國小實境解謎：黃金蝙蝠的秘密</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /*
+         * --- CSS 樣式：暗色系、卡通活潑風格 ---
+         */
+
+        :root {
+            --dark-bg: #1e272e; /* 深色背景 */
+            --main-color: #f39c12; /* 黃金蝙蝠色 (主題色) */
+            --accent-color: #27ae60; /* 稻米/成功色 */
+            --text-color: #ecf0f1;
+            --card-bg: #34495e;
+            --font-cartoon: 'Fredoka One', cursive;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: var(--font-body);
+            color: var(--text-color);
+            background-color: var(--dark-bg);
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 800px; /* 限制最大寬度，電腦瀏覽器更舒適 */
+            min-height: 100vh;
+            background-color: var(--dark-bg);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 標題動畫效果 (卡通風格) */
+        h1, h2 {
+            font-family: var(--font-cartoon);
+            color: var(--main-color);
+            text-align: center;
+            text-shadow: 3px 3px 0 #000000;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-5px); }
+        }
+
+        /* --- 首頁樣式 --- */
+        #home-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        #background-visual {
+            background-image: url('/* [替換成您的黃金蝙蝠與稻米背景圖片 URL] */');
+            background-size: cover;
+            background-position: center;
+            height: 300px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #characters {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            height: 100%;
+            align-items: flex-end;
+        }
+
+        .character-img {
+            width: 120px;
+            height: 180px;
+            background-size: cover;
+            border-radius: 10px 10px 0 0;
+            border: 5px solid var(--accent-color);
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+            animation: float 3s ease-in-out infinite alternate;
+        }
+
+        #char-girl {
+            background-image: url('/* [替換成您的酷炫女孩角色圖片 URL] */');
+            animation-delay: 0s;
+        }
+        #char-boy {
+            background-image: url('/* [替換成您的酷炫男孩角色圖片 URL] */');
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+
+        /* --- 遊戲卡片樣式 --- */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-left: 5px solid var(--main-color);
+        }
+
+        .level-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 輸入框和按鈕 */
+        input[type="text"], button {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.1em;
+            font-family: var(--font-body);
+        }
+
+        input[type="text"] {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            border: 2px solid var(--main-color);
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        button {
+            cursor: pointer;
+            background-color: var(--main-color);
+            color: var(--dark-bg);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.1s, background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #e67e22;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .locked-level {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .success-message {
+            color: var(--accent-color);
+            font-weight: bold;
+            margin-top: 10px;
+            animation: fadeIn 1s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- 證書樣式 (最後一關) --- */
+        #certificate-screen {
+            text-align: center;
+            padding: 40px 20px;
+            display: none; /* 預設隱藏 */
+        }
+
+        #certificate {
+            background-color: #f7f7f7;
+            color: #333;
+            border: 10px solid var(--main-color);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        #certificate h2 {
+            font-family: 'Times New Roman', serif;
+            color: #c0392b;
+            font-size: 2.5em;
+            text-shadow: none;
+        }
+        #certificate p {
+            font-size: 1.2em;
+            margin: 15px 0;
+        }
+        #certificate-name {
+            font-family: var(--font-cartoon);
+            font-size: 2em;
+            color: var(--accent-color);
+            margin: 10px 0;
+            display: block;
+        }
+        #certificate-date {
+            font-size: 0.9em;
+            color: #777;
+            margin-top: 20px;
+        }
+
+        /* --- RWD 手機優化 --- */
+        @media (max-width: 600px) {
+            #app-container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            h2 {
+                font-size: 1.4em;
+            }
+            #background-visual {
+                height: 200px;
+            }
+            .character-img {
+                width: 80px;
+                height: 120px;
+            }
+            .card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop autoplay>
+        <source src="/* [替換成您的輕鬆愉快音樂檔案 URL (e.g., .mp3)] */" type="audio/mpeg">
+        您的瀏覽器不支援音樂播放。
+    </audio>
+
+    <div id="app-container">
+
+        <section id="home-screen">
+            <h1>🦇 新嘉國小實境解謎 🌾</h1>
+            <h2>黃金蝙蝠的秘密 | The Golden Bat's Secret</h2>
+
+            <div id="background-visual">
+                <div id="characters">
+                    <div id="char-girl" class="character-img"></div>
+                    <div id="char-boy" class="character-img"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <p>歡迎來到新嘉！準備好和我們一起探索黃金蝙蝠的生態奧秘了嗎？</p>
+                <p>Welcome to Shin-Chia! Are you ready to explore the mystery of the Golden Bat?</p>
+                <input type="text" id="nickname-input" placeholder="請輸入您的暱稱 (Enter Your Nickname)">
+                <button onclick="startGame()">開始冒險 (Start Adventure)</button>
+            </div>
+        </section>
+
+        <section id="game-levels" style="display: none;">
+            <p style="text-align: right; margin-bottom: 20px;">玩家暱稱: <strong id="player-nickname"></strong></p>
+
+            <div id="level-1" class="card">
+                <h2>Level 1: 蝙蝠在哪裡? | Where is the Bat?</h2>
+                <div class="level-content">
+                    <p>黃金蝙蝠又稱什麼蝙蝠？請用**中文**回答。<br>What is another common name for the Golden Bat? Please answer in **Chinese**.</p>
+                    <input type="text" id="answer-1" placeholder="請輸入中文答案 (Enter Chinese Answer)">
+                    <p id="message-1" class="success-message" style="display: none;"></p>
+                    <button onclick="checkAnswer(1)">檢查答案 (Check Answer)</button>
+                </div>
+            </div>
+
+            <div id="level-2" class="card locked-level">
+                <h2>Level 2: 蝙蝠吃什麼? | What Does the Bat Eat?</h2>
+                <div class="level-content">
+                    <p>黃金蝙蝠主要吃蚊蟲。請將 "insect" 翻譯成**中文**。<br>The Golden Bat mainly eats insects. Please translate "insect" into **Chinese**.</p>
+                    <input type="text" id="answer-2" placeholder="請輸入中文答案 (Enter Chinese Answer)">
+                    <p id="message-2" class="success-message" style="display: none;"></p>
+                    <button onclick="checkAnswer(2)">檢查答案 (Check Answer)</button>
+                </div>
+            </div>
+
+            <div id="level-3" class="card locked-level">
+                <h2>Level 3: 蝙蝠與稻米? | Bat and Rice?</h2>
+                <div class="level-content">
+                    <p>新嘉國小校區周圍種植了許多稻米。黃金蝙蝠有助於農夫的原因是？請用**英文**簡短回答。<br>Rice is planted around Shin-Chia Elementary. Why are Golden Bats helpful to the farmers? Answer briefly in **English**.</p>
+                    <input type="text" id="answer-3" placeholder="請輸入英文答案 (Enter English Answer)">
+                    <p id="message-3" class="success-message" style="display: none;"></p>
+                    <button onclick="checkAnswer(3)">檢查答案 (Check Answer)</button>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="certificate-screen">
+            <h1>任務完成！Congratulation!</h1>
+            <div id="certificate">
+                <h2>通關證明書<br>Certificate of Completion</h2>
+                <p>恭喜玩家</p>
+                <span id="certificate-name"></span>
+                <p>成功完成「新嘉國小黃金蝙蝠生態實境解謎」所有關卡，<br>展現出對生態保育與雙語學習的熱忱。</p>
+                <p>Has successfully completed all levels of the "Shin-Chia Golden Bat Ecology Riddle", demonstrating enthusiasm for ecological conservation and bilingual learning.</p>
+                <p id="certificate-date">頒發日期: ${new Date().toLocaleDateString('zh-TW')}</p>
+                <img src="/* [替換成您的校徽或蝙蝠圖案] */" alt="新嘉國小圖案" style="width: 80px; margin-top: 15px;">
+            </div>
+        </section>
+
+        <footer style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #7f8c8d;">
+            版本號: v0.1 | 新嘉國小校本課程專用
+        </footer>
+    </div>
+
+    <script>
+        /*
+         * --- JavaScript 邏輯：關卡互動與流程控制 ---
+         */
+
+        let playerName = "";
+        let currentLevel = 1;
+        const correctAnswers = {
+            1: ["東亞家蝠", "東亞折翅蝠"], // 實際上黃金蝙蝠是東亞折翅蝠，但常被誤稱為東亞家蝠，兩個都接受。
+            2: ["昆蟲", "蟲子"],
+            3: ["pest control", "eat insects", "eat the pests"] // 只要包含"pest"或"insects"
+        };
+
+        // 啟動遊戲：儲存暱稱並切換到關卡畫面
+        function startGame() {
+            playerName = document.getElementById('nickname-input').value.trim();
+            if (playerName.length < 2) {
+                alert("請輸入一個暱稱！Please enter a nickname!");
+                return;
+            }
+
+            document.getElementById('player-nickname').textContent = playerName;
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('game-levels').style.display = 'block';
+
+            // 嘗試播放音樂 (需使用者互動才能播放)
+            document.getElementById('bg-music').play().catch(error => {
+                console.log("音樂自動播放失敗，需使用者點擊播放。");
+            });
+        }
+
+        // 檢查關卡答案
+        function checkAnswer(level) {
+            const inputElement = document.getElementById(`answer-${level}`);
+            const messageElement = document.getElementById(`message-${level}`);
+            const userAnswer = inputElement.value.trim().toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5\s]/g, ''); // 移除標點符號
+            const correctSet = correctAnswers[level];
+            let isCorrect = false;
+
+            if (level === 3) {
+                // 關卡 3 英文答案，檢查是否包含關鍵詞
+                for (const keyword of correctSet) {
+                    if (userAnswer.includes(keyword)) {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+            } else {
+                // 關卡 1, 2 中文答案，全匹配
+                isCorrect = correctSet.some(answer => userAnswer === answer);
+            }
+
+            if (isCorrect) {
+                messageElement.textContent = "✅ 太棒了！獎勵：解鎖下一關！";
+                messageElement.style.display = 'block';
+                inputElement.disabled = true;
+
+                // 進入下一關或通關
+                if (level < 3) {
+                    currentLevel = level + 1;
+                    unlockNextLevel(currentLevel);
+                } else {
+                    showCertificate();
+                }
+
+            } else {
+                messageElement.textContent = "❌ 答案不正確，再試試看！(Hint: 請注意雙語提示)";
+                messageElement.style.display = 'block';
+            }
+        }
+
+        // 解鎖下一關
+        function unlockNextLevel(level) {
+            const nextLevelElement = document.getElementById(`level-${level}`);
+            if (nextLevelElement) {
+                nextLevelElement.classList.remove('locked-level');
+            }
+        }
+
+        // 顯示通關證書
+        function showCertificate() {
+            document.getElementById('game-levels').style.display = 'none';
+            document.getElementById('certificate-name').textContent = playerName;
+            document.getElementById('certificate-screen').style.display = 'block';
+        }
+
+        // 檢查使用者是否已進行互動 (用於解決手機瀏覽器音樂播放限制)
+        document.addEventListener('click', () => {
+            const music = document.getElementById('bg-music');
+            if (music.paused) {
+                music.play().catch(e => console.log("等待更多使用者互動。"));
+            }
+        }, { once: true });
+
+        // 設定初始日期
+        document.getElementById('certificate-date').textContent = '頒發日期: ' + new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+    </script>
+</body>
+</html>
