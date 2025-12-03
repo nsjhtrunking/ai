@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五十音配對遊戲 - v0.1</title>
+    <style>
+        /* CSS 樣式 */
+        :root {
+            --primary-color: #3f51b5;
+            --secondary-color: #ff9800;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --bg-color: #f0f4f8;
+            --text-color: #212121;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            flex-wrap: wrap; /* 支援手機佈局 */
+        }
+
+        #game-area {
+            flex: 3;
+            min-width: 300px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #error-log {
+            flex: 1;
+            min-width: 200px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #error-log h3 {
+            margin-top: 0;
+            color: var(--error-color);
+            border-bottom: 2px solid var(--error-color);
+            padding-bottom: 5px;
+        }
+
+        #error-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        #error-list li {
+            padding: 8px 0;
+            border-bottom: 1px dotted #ccc;
+            font-size: 0.9em;
+        }
+
+        /* 卡片區域 */
+        #cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+            flex-grow: 1;
+            align-content: start;
+        }
+
+        .card {
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            text-align: center;
+            border: 3px solid #ccc;
+        }
+        
+        /* 平假名卡片 */
+        .card.kana {
+            color: var(--primary-color);
+            background-color: #e8eaf6;
+            border-color: var(--primary-color);
+            font-size: 3em;
+            line-height: 1;
+        }
+        /* 羅馬字卡片 */
+        .card.roman {
+            color: var(--secondary-color);
+            background-color: #fff3e0;
+            border-color: var(--secondary-color);
+            font-size: 1.5em;
+        }
+
+
+        .card:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
+        }
+
+        .card.selected {
+            border-style: dashed;
+            box-shadow: 0 0 10px var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .card.matched {
+            visibility: hidden; /* 配對成功後隱藏 */
+            pointer-events: none;
+        }
+        
+        /* 遊戲狀態訊息 */
+        #status-message {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: var(--text-color);
+        }
+
+        #reset-button {
+            padding: 10px 20px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        #reset-button:hover {
+            background-color: #388e3c;
+        }
+
+        /* 手機/平板佈局調整 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            #error-log {
+                max-height: 300px; /* 在手機上限制高度 */
+            }
+            
+            #cards-container {
+                 grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                 gap: 8px;
+            }
+            
+            .card {
+                height: 80px;
+                font-size: 1.2em;
+            }
+            .card.kana {
+                font-size: 2.5em;
+            }
+        }
+        
+        /* 勝利畫面 */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            z-index: 100;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .game-over h2 {
+            color: var(--success-color);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>日文五十音配對學習遊戲 (v0.1)</h1>
+    </header>
+
+    <div class="container">
+        <div id="game-area">
+            <h2>字型與字音配對</h2>
+            <div id="status-message">點擊兩張卡片進行配對。</div>
+            <div id="cards-container">
+                </div>
+            <button id="reset-button">重新開始</button>
+            
+            <div id="game-over-screen" style="display: none;"></div>
+        </div>
+
+        <div id="error-log">
+            <h3>錯誤紀錄</h3>
+            <ul id="error-list">
+                <li>無錯誤紀錄。</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript 程式碼
+        const KANA_MAP = {
+            'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o',
+            'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
+            'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so',
+            'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
+            'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
+            'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
+            'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
+            'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
+            'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
+            'わ': 'wa', 'を': 'wo', 'ん': 'n'
+            // 為了簡化，這邊只選取了部分常用的清音
+        };
+
+        const cardsContainer = document.getElementById('cards-container');
+        const statusMessage = document.getElementById('status-message');
+        const errorList = document.getElementById('error-list');
+        const resetButton = document.getElementById('reset-button');
+        const gameOverScreen = document.getElementById('game-over-screen');
+
+        let allPairs = Object.entries(KANA_MAP);
+        let selectedCards = []; // 儲存已選取的卡片
+        let matchedCount = 0; // 已配對成功的數量
+        let totalPairs = 0; // 總配對數
+        let errorLog = {}; // 錯誤紀錄
+        let gameActive = true;
+
+        // 隨機打亂陣列順序
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 初始化遊戲
+        function initGame() {
+            gameActive = true;
+            cardsContainer.innerHTML = '';
+            selectedCards = [];
+            matchedCount = 0;
+            totalPairs = allPairs.length;
+            errorLog = {};
+            
+            updateErrorLog(); // 清空錯誤紀錄
+            gameOverScreen.style.display = 'none';
+
+            // 1. 準備所有的卡片內容
+            let allCards = [];
+            allPairs.forEach(([kana, roman]) => {
+                // 每個字元產生兩張卡片：五十音(kana) 和 羅馬字(roman)
+                allCards.push({ value: kana, type: 'kana', match: roman });
+                allCards.push({ value: roman, type: 'roman', match: kana });
+            });
+
+            // 2. 打亂卡片
+            shuffle(allCards);
+
+            // 3. 生成 HTML 卡片
+            allCards.forEach(cardData => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card', cardData.type);
+                cardElement.textContent = cardData.value;
+                cardElement.dataset.match = cardData.match;
+                cardElement.dataset.value = cardData.value;
+                cardElement.addEventListener('click', handleCardClick);
+                cardsContainer.appendChild(cardElement);
+            });
+            
+            statusMessage.textContent = `共有 ${totalPairs} 組配對。`;
+        }
+
+        // 處理卡片點擊事件
+        function handleCardClick(event) {
+            if (!gameActive) return;
+
+            const clickedCard = event.currentTarget;
+
+            // 1. 已經配對成功的卡片不能再選
+            if (clickedCard.classList.contains('matched')) return;
+
+            // 2. 如果是重複點擊同一張卡片，則取消選擇
+            if (selectedCards.includes(clickedCard)) {
+                clickedCard.classList.remove('selected');
+                selectedCards = selectedCards.filter(card => card !== clickedCard);
+                return;
+            }
+
+            // 3. 選取卡片
+            clickedCard.classList.add('selected');
+            selectedCards.push(clickedCard);
+
+            // 4. 判斷是否湊滿兩張卡片
+            if (selectedCards.length === 2) {
+                // 暫時禁用點擊，直到判斷完成
+                gameActive = false; 
+                
+                const [card1, card2] = selectedCards;
+
+                // 檢查是否是不同類型 (kana vs roman)
+                const isDifferentType = card1.classList.contains('kana') !== card2.classList.contains('kana');
+
+                if (isDifferentType && card1.dataset.match === card2.dataset.value) {
+                    // **配對成功**
+                    statusMessage.textContent = '✅ 配對成功！';
+                    
+                    setTimeout(() => {
+                        card1.classList.add('matched');
+                        card2.classList.add('matched');
+                        matchedCount++;
+                        
+                        // 清空選取的卡片
+                        selectedCards = [];
+                        gameActive = true; // 重新啟用點擊
+                        statusMessage.textContent = `點擊兩張卡片進行配對。 已完成: ${matchedCount}/${totalPairs}`;
+
+                        // 檢查遊戲是否結束
+                        if (matchedCount === totalPairs) {
+                            endGame(true);
+                        }
+                    }, 500);
+
+                } else {
+                    // **配對失敗**
+                    statusMessage.textContent = '❌ 配對錯誤。請再試一次。';
+
+                    // 記錄錯誤
+                    logError(card1, card2);
+
+                    setTimeout(() => {
+                        card1.classList.remove('selected');
+                        card2.classList.remove('selected');
+                        selectedCards = [];
+                        gameActive = true; // 重新啟用點擊
+                        statusMessage.textContent = `點擊兩張卡片進行配對。 已完成: ${matchedCount}/${totalPairs}`;
+                    }, 1000);
+                }
+            }
+        }
+        
+        // 記錄錯誤的函數
+        function logError(cardA, cardB) {
+            let kanaCard, romanCard;
+            if (cardA.classList.contains('kana')) {
+                kanaCard = cardA;
+                romanCard = cardB;
+            } else {
+                kanaCard = cardB;
+                romanCard = cardA;
+            }
+
+            const kana = kanaCard.dataset.value;
+            const correctRoman = KANA_MAP[kana];
+
+            // 紀錄錯誤次數
+            errorLog[kana] = { 
+                correct: correctRoman, 
+                attempt: romanCard.dataset.value,
+                count: (errorLog[kana] ? errorLog[kana].count : 0) + 1
+            };
+            
+            updateErrorLog();
+        }
+
+        // 更新錯誤紀錄列表
+        function updateErrorLog() {
+            errorList.innerHTML = ''; // 清空列表
+            const errors = Object.keys(errorLog);
+            
+            if (errors.length === 0) {
+                errorList.innerHTML = '<li>無錯誤紀錄。</li>';
+                return;
+            }
+
+            errors.sort((a, b) => errorLog[b].count - errorLog[a].count); // 依錯誤次數排序
+
+            errors.forEach(kana => {
+                const log = errorLog[kana];
+                const listItem = document.createElement('li');
+                
+                let detail = `你選了 "${log.attempt}"`;
+                if (log.count > 1) {
+                    detail += ` (${log.count} 次)`;
+                }
+                
+                listItem.innerHTML = `<strong>${kana}</strong> (應為 <strong>${log.correct}</strong>) - ${detail}`;
+                errorList.appendChild(listItem);
+            });
+        }
+        
+        // 遊戲結束
+        function endGame(isWin) {
+            gameActive = false;
+            
+            if (isWin) {
+                gameOverScreen.style.display = 'flex';
+                gameOverScreen.classList.add('game-over');
+                
+                const totalErrors = Object.keys(errorLog).length;
+                let message = `<h2>恭喜！全部配對成功！</h2>`;
+                
+                if (totalErrors > 0) {
+                     message += `<p>您總共有 <strong>${totalErrors}</strong> 個字有錯誤紀錄。請多加練習！</p>`;
+                } else {
+                     message += `<p>表現完美，沒有任何錯誤紀錄！</p>`;
+                }
+
+                message += `<button onclick="initGame()">再玩一次</button>`;
+                
+                gameOverScreen.innerHTML = message;
+            }
+        }
+
+
+        // 綁定重新開始按鈕
+        resetButton.addEventListener('click', initGame);
+
+        // 首次載入執行
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
