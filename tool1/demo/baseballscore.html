@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>棒球賽事紀錄 - v0.1</title>
+    <title>棒球賽事紀錄 - v0.2</title>
     <style>
         /* CSS for Bright UI and Layout */
         :root {
             --primary-color: #007bff; /* Blue */
             --secondary-color: #28a745; /* Green */
+            --danger-color: #dc3545; /* Red */
             --background-color: #f8f9fa; /* Light Gray */
             --card-background: #ffffff; /* White */
             --text-color: #212529; /* Dark Gray */
             --border-color: #ced4da;
             --header-bg: #e9ecef;
             --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            --inning-header-bg: #e2f0ff; /* Light Blue for Inning */
         }
 
         body {
@@ -57,14 +59,13 @@
         h1 {
             color: var(--primary-color);
             margin: 0;
-            font-size: 1.5rem; /* Mobile friendly size */
+            font-size: 1.5rem;
         }
 
         main {
             padding-top: 80px; /* Offset for fixed header */
         }
 
-        /* Form/Input Styles */
         .card {
             background-color: var(--card-background);
             border-radius: 8px;
@@ -81,65 +82,103 @@
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
-            color: var(--primary-color);
         }
 
-        input[type="text"], input[type="number"], select {
+        input[type="text"], select {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             box-sizing: border-box;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
-        button {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #1e7e34;
-        }
-
-        /* Player List & Scoreboard */
-        #playerList, #scoreBoard {
-            list-style: none;
-            padding: 0;
+        /* Lineup Table Styles */
+        #lineupTable {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 15px;
         }
 
-        #playerList li {
-            background-color: var(--header-bg);
-            margin-bottom: 8px;
+        #lineupTable th, #lineupTable td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        #lineupTable th {
+            background-color: var(--primary-color);
+            color: white;
+            position: sticky;
+            top: 60px; /* Below header */
+            z-index: 50;
+        }
+        
+        #lineupTable .inning-col {
+            min-width: 100px; /* Ensure enough space for buttons */
+        }
+
+        /* Result Button Styles */
+        .result-btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .result-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            flex-grow: 1; /* Allow buttons to grow */
+            min-width: 40px; /* Minimum width for small screens */
+            transition: background-color 0.1s;
+        }
+
+        .result-btn.out-result {
+            background-color: var(--danger-color);
+        }
+
+        .result-btn.hit-result {
+            background-color: var(--primary-color);
+        }
+        
+        .result-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Current Inning Header */
+        .inning-header {
+            background-color: var(--inning-header-bg);
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            text-align: left;
+        }
+
+        /* Log Section */
+        #log-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            background-color: #f1f1f1;
             padding: 10px;
             border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
         }
-
-        .score-display {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        /* Responsive adjustments */
+        
+        /* Interactive Drag and Zoom */
         @media (min-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
             main {
-                max-width: 900px;
+                max-width: 1200px;
                 margin: 0 auto;
-                padding-top: 90px;
             }
         }
     </style>
@@ -147,120 +186,269 @@
 <body>
 
     <header>
-        <h1>⚾ 棒球賽事紀錄網頁 v0.1</h1>
+        <h1>⚾ 棒球賽事紀錄網頁 v0.2</h1>
     </header>
 
     <div id="viewport">
         <div id="content">
             <main>
                 <div class="card">
-                    <h2>📝 球員資訊輸入</h2>
-                    <div class="input-group">
-                        <label for="playerName">球員姓名：</label>
-                        <input type="text" id="playerName" placeholder="例如：王小明">
-                    </div>
-                    <button onclick="addPlayer()">加入球員</button>
-                    
-                    <h3>已登錄球員</h3>
-                    <ul id="playerList">
-                        </ul>
+                    <h2>📝 攻方棒次與守備位置</h2>
+                    <table id="lineupInputTable">
+                        <thead>
+                            <tr>
+                                <th>棒次</th>
+                                <th>姓名</th>
+                                <th>守備位置</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lineupBody">
+                            </tbody>
+                    </table>
                 </div>
 
                 <div class="card">
-                    <h2>🏟️ 比賽紀錄</h2>
-                    <div class="input-group">
-                        <label for="currentInning">目前局數 (Inning)：</label>
-                        <input type="number" id="currentInning" value="1" min="1" max="9" onchange="updateInning()">
-                    </div>
-                    
-                    <h3>比分紀錄</h3>
-                    <div class="input-group">
-                        <label>主隊分數：<span id="homeScoreDisplay" class="score-display">0</span></label>
-                        <button onclick="changeScore('home', 1)">主隊 +1</button>
-                    </div>
-                    <div class="input-group">
-                        <label>客隊分數：<span id="awayScoreDisplay" class="score-display">0</span></label>
-                        <button onclick="changeScore('away', 1)">客隊 +1</button>
-                    </div>
+                    <h2>📊 比賽紀錄表</h2>
+                    <table id="lineupTable">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 60px;">棒次</th>
+                                <th style="min-width: 100px;">姓名 / 守備</th>
+                                </tr>
+                        </thead>
+                        <tbody id="recordBody">
+                            </tbody>
+                    </table>
 
-                    <h3>目前局數：<span id="inningDisplay" class="score-display">1</span> 局</h3>
+                    <button class="result-btn" style="background-color: #007bff; margin-top: 15px;" onclick="endInning()">
+                        此局攻擊結束 (推進下一局)
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>📜 紀錄 Log</h2>
+                    <div id="log-container">尚未有攻擊紀錄...</div>
                 </div>
                 
                 <p style="text-align: center; margin-top: 30px; color: #6c757d;">提示：點擊或拖曳此頁面以移動，電腦可使用滾輪縮放。</p>
-
             </main>
         </div>
     </div>
 
     <script>
-        // Data Store
-        let players = [];
-        let homeScore = 0;
-        let awayScore = 0;
+        // --- Configuration ---
+        const MAX_BATTERS = 10;
+        const DEFENSIVE_POSITIONS = [
+            'P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'EH'
+        ];
+        const AT_BAT_RESULTS = {
+            O: { label: 'O', type: 'out', className: 'out-result' },
+            FO: { label: 'FO', type: 'out', className: 'out-result' },
+            K: { label: 'K', type: 'out', className: 'out-result' },
+            '1B': { label: '1B', type: 'hit', className: 'hit-result' },
+            '1B(1)': { label: '1B(1)', type: 'hit', runs: 1, className: 'hit-result' },
+            '1B(2)': { label: '1B(2)', type: 'hit', runs: 2, className: 'hit-result' },
+            '1B(3)': { label: '1B(3)', type: 'hit', runs: 3, className: 'hit-result' },
+            '2B': { label: '2B', type: 'hit', className: 'hit-result' },
+            '2B(1)': { label: '2B(1)', type: 'hit', runs: 1, className: 'hit-result' },
+            '2B(2)': { label: '2B(2)', type: 'hit', runs: 2, className: 'hit-result' },
+            '2B(3)': { label: '2B(3)', type: 'hit', runs: 3, className: 'hit-result' },
+            HR: { label: 'HR', type: 'hit', runs: 4, className: 'hit-result' }, // Max 4 runs for HR
+            BB: { label: 'BB', type: 'base', className: '' },
+            'FC(1)': { label: 'FC(1)', type: 'out', runs: 1, className: 'out-result' }, // Fielder's Choice w/ 1 run
+            'FC(2)': { label: 'FC(2)', type: 'out', runs: 2, className: 'out-result' }, 
+            'FC(3)': { label: 'FC(3)', type: 'out', runs: 3, className: 'out-result' },
+        };
+        const AB_RESULT_KEYS = Object.keys(AT_BAT_RESULTS);
+
+        // --- Data Store ---
+        let lineup = []; // { batterId: number, name: string, position: string }
         let currentInning = 1;
+        let gameRecord = {}; // { batterId: { 1: '1B(1)', 2: 'K', ... }, ... }
+        let gameLog = []; // [{ inning: number, batterId: number, result: string, name: string, position: string }]
 
-        // Player Management
-        function addPlayer() {
-            const input = document.getElementById('playerName');
-            const name = input.value.trim();
+        // --- DOM Elements ---
+        const lineupBody = document.getElementById('lineupBody');
+        const lineupTableHead = document.getElementById('lineupTable').querySelector('thead tr');
+        const recordBody = document.getElementById('recordBody');
+        const logContainer = document.getElementById('log-container');
 
-            if (name && !players.includes(name)) {
-                players.push(name);
-                input.value = '';
-                renderPlayerList();
-                console.log(`Player added: ${name}`);
-            } else if (players.includes(name)) {
-                alert('該球員已登錄！');
-            } else {
-                alert('請輸入球員姓名！');
+
+        // --- Initialization ---
+
+        function initLineupInput() {
+            for (let i = 1; i <= MAX_BATTERS; i++) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i}</td>
+                    <td><input type="text" id="name-${i}" placeholder="球員姓名" onchange="updateLineup(${i})"></td>
+                    <td><select id="pos-${i}" onchange="updateLineup(${i})">${generatePositionOptions()}</select></td>
+                `;
+                lineupBody.appendChild(tr);
+                lineup.push({ batterId: i, name: '', position: DEFENSIVE_POSITIONS[0] });
+                gameRecord[i] = {};
             }
         }
 
-        function renderPlayerList() {
-            const list = document.getElementById('playerList');
-            list.innerHTML = '';
-            players.forEach(name => {
-                const li = document.createElement('li');
-                li.innerHTML = `${name} <button onclick="removePlayer('${name}')" style="background-color: #dc3545;">移除</button>`;
-                list.appendChild(li);
+        function generatePositionOptions() {
+            return DEFENSIVE_POSITIONS.map(pos => `<option value="${pos}">${pos}</option>`).join('');
+        }
+
+        // --- Lineup Management ---
+
+        function updateLineup(batterId) {
+            const nameInput = document.getElementById(`name-${batterId}`);
+            const posSelect = document.getElementById(`pos-${batterId}`);
+            
+            const playerIndex = batterId - 1;
+            lineup[playerIndex].name = nameInput.value.trim();
+            lineup[playerIndex].position = posSelect.value;
+            
+            renderRecordTable();
+        }
+
+        // --- Record Table Rendering ---
+
+        function renderInningHeader() {
+            // Remove all existing inning columns
+            const existingInnings = lineupTableHead.querySelectorAll('.inning-header-col');
+            existingInnings.forEach(col => col.remove());
+
+            // Add new inning columns
+            for (let i = 1; i <= currentInning; i++) {
+                const th = document.createElement('th');
+                th.className = 'inning-header-col';
+                th.textContent = `${i} 局`;
+                lineupTableHead.appendChild(th);
+            }
+        }
+
+        function renderRecordTable() {
+            recordBody.innerHTML = '';
+            
+            lineup.forEach(player => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${player.batterId}</td>
+                    <td>${player.name || '(未輸入)'} / ${player.position}</td>
+                `;
+
+                for (let i = 1; i <= currentInning; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'inning-col';
+
+                    const recordedResult = gameRecord[player.batterId][i];
+
+                    if (i === currentInning) {
+                        // Current Inning: show buttons
+                        if (recordedResult) {
+                            // Show recorded result
+                             td.innerHTML = `<span style="font-weight: bold; color: ${AT_BAT_RESULTS[recordedResult].type === 'out' ? var(--danger-color) : var(--primary-color)};">${recordedResult}</span>`;
+                        } else {
+                            // Show input buttons
+                            td.innerHTML = generateResultButtons(player.batterId, i);
+                        }
+                    } else {
+                        // Past Innings: show recorded result or '-'
+                        td.innerHTML = recordedResult 
+                            ? `<span style="font-weight: bold; color: ${AT_BAT_RESULTS[recordedResult].type === 'out' ? '#6c757d' : '#28a745'};">${recordedResult}</span>`
+                            : '-';
+                    }
+                    tr.appendChild(td);
+                }
+                recordBody.appendChild(tr);
             });
+            
+            // Re-render headers (in case currentInning changed)
+            renderInningHeader();
         }
 
-        function removePlayer(nameToRemove) {
-            players = players.filter(name => name !== nameToRemove);
-            renderPlayerList();
-            console.log(`Player removed: ${nameToRemove}`);
+        function generateResultButtons(batterId, inning) {
+            let html = '<div class="result-btn-container">';
+            AB_RESULT_KEYS.forEach(result => {
+                const resultInfo = AT_BAT_RESULTS[result];
+                const btnClass = resultInfo.className;
+                html += `<button class="result-btn ${btnClass}" onclick="recordAtBat(${batterId}, ${inning}, '${result}')">${result}</button>`;
+            });
+            html += '</div>';
+            return html;
         }
 
-        // Score/Inning Management
-        function changeScore(team, amount) {
-            if (team === 'home') {
-                homeScore += amount;
-                if (homeScore < 0) homeScore = 0;
-                document.getElementById('homeScoreDisplay').textContent = homeScore;
-                console.log(`Home score: ${homeScore}`);
-            } else if (team === 'away') {
-                awayScore += amount;
-                if (awayScore < 0) awayScore = 0;
-                document.getElementById('awayScoreDisplay').textContent = awayScore;
-                console.log(`Away score: ${awayScore}`);
+        // --- Game Logic ---
+
+        function recordAtBat(batterId, inning, result) {
+            if (inning !== currentInning) return; // Only allow record on current inning
+
+            const player = lineup.find(p => p.batterId === batterId);
+            if (!player || !player.name) {
+                alert('請先輸入該棒次球員姓名！');
+                return;
             }
+            
+            // 1. Record Result
+            gameRecord[batterId][inning] = result;
+            
+            // 2. Update Log
+            gameLog.push({
+                inning: inning,
+                batterId: batterId,
+                name: player.name,
+                position: player.position,
+                result: result,
+                runs: AT_BAT_RESULTS[result].runs || 0
+            });
+            
+            // 3. Re-render Table and Log
+            renderRecordTable();
+            renderLog();
+            
+            console.log(`Inning ${inning}, Batter ${batterId} (${player.name}): ${result}`);
         }
 
-        function updateInning() {
-            const input = document.getElementById('currentInning');
-            const newInning = parseInt(input.value);
-            if (newInning >= 1) {
-                currentInning = newInning;
-            } else {
-                currentInning = 1;
-                input.value = 1;
+        function endInning() {
+            // Check if all batters have results in the current inning
+            const allResultsRecorded = lineup.every(player => gameRecord[player.batterId][currentInning]);
+
+            if (!allResultsRecorded) {
+                const confirmSkip = confirm('本局仍有球員未記錄攻擊結果，確定要結束此局並推進到下一局嗎？');
+                if (!confirmSkip) {
+                    return;
+                }
             }
-            document.getElementById('inningDisplay').textContent = currentInning;
-            console.log(`Current Inning: ${currentInning}`);
+
+            currentInning++;
+            
+            // Ensure new inning column is added for all players
+            lineup.forEach(player => {
+                if (!gameRecord[player.batterId][currentInning]) {
+                    gameRecord[player.batterId][currentInning] = null;
+                }
+            });
+
+            renderRecordTable();
+            // Scroll to the right to see the new inning column (if needed)
+            document.getElementById('lineupTable').scrollLeft = document.getElementById('lineupTable').scrollWidth;
+            console.log(`--- Inning ${currentInning - 1} Ended. Starting Inning ${currentInning}. ---`);
         }
-        
-        // --- Interactive Drag and Zoom Functionality (The complex part) ---
+
+        function renderLog() {
+            if (gameLog.length === 0) {
+                logContainer.textContent = '尚未有攻擊紀錄...';
+                return;
+            }
+
+            let logText = '';
+            gameLog.forEach(log => {
+                const runsText = log.runs > 0 ? ` (得分: ${log.runs} 分)` : '';
+                logText += `[${log.inning}局] 棒次${log.batterId} (${log.name}/${log.position}): ${log.result}${runsText}\n`;
+            });
+            logContainer.textContent = logText;
+            // Auto-scroll to bottom of log
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+
+        // --- Interactive Drag and Zoom Functionality (From v0.1) ---
 
         const viewport = document.getElementById('viewport');
         const content = document.getElementById('content');
@@ -268,7 +456,6 @@
         let panX = 0;
         let panY = 0;
 
-        // Apply transform to content
         function applyTransform() {
             content.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
         }
@@ -279,27 +466,24 @@
         let lastPanX, lastPanY;
 
         viewport.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
-                return; // Ignore drag start on interactive elements
-            }
+            // Ignore drag start on interactive elements
+            if (e.target.closest('input, button, select, th')) return;
+            
             isDragging = true;
             viewport.style.cursor = 'grabbing';
             startX = e.clientX;
             startY = e.clientY;
             lastPanX = panX;
             lastPanY = panY;
-            e.preventDefault(); // Prevents image dragging/text selection
+            e.preventDefault();
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
-            
             panX = lastPanX + dx;
             panY = lastPanY + dy;
-            
             applyTransform();
         });
 
@@ -311,15 +495,13 @@
         // Mouse Wheel Zoom
         viewport.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const delta = e.deltaY * -0.01; // Scroll direction
-            const newScale = Math.min(Math.max(0.5, scale + delta), 3.0); // Limit scale 0.5 to 3.0
+            const delta = e.deltaY * -0.01;
+            const newScale = Math.min(Math.max(0.5, scale + delta), 3.0);
             
-            // Calculate point to zoom around (mouse position relative to viewport)
             const rect = viewport.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            // Adjust panX and panY to keep the mouse point fixed during zoom
             const scaleFactor = newScale / scale;
             panX = mouseX - (mouseX - panX) * scaleFactor;
             panY = mouseY - (mouseY - panY) * scaleFactor;
@@ -334,22 +516,18 @@
         let lastPanXTouch, lastPanYTouch;
 
         viewport.addEventListener('touchstart', (e) => {
+            // Check if touch starts on interactive element
+            if (e.target.closest('input, button, select, th')) return;
+
             if (e.touches.length === 1) {
-                // Single touch (Drag)
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
-                    return; // Allow native interaction on form elements
-                }
                 e.preventDefault();
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
                 lastPanXTouch = panX;
                 lastPanYTouch = panY;
             } else if (e.touches.length === 2) {
-                // Two touches (Zoom/Pan)
                 e.preventDefault();
                 touchStartDist = getDistance(e.touches[0], e.touches[1]);
-                
-                // Set initial pan for two-finger drag
                 touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 touchStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 lastPanXTouch = panX;
@@ -359,21 +537,17 @@
 
         viewport.addEventListener('touchmove', (e) => {
             if (e.touches.length === 2 && touchStartDist > 0) {
-                // Two-finger: Zoom and Pan
                 e.preventDefault();
                 const newDist = getDistance(e.touches[0], e.touches[1]);
                 const scaleRatio = newDist / touchStartDist;
-                
                 const newScale = Math.min(Math.max(0.5, scale * scaleRatio), 3.0);
 
-                // Pan calculation for two-finger drag
                 const touchMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const touchMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 
                 const dx = touchMidX - touchStartX;
                 const dy = touchMidY - touchStartY;
                 
-                // Adjust pan to center on the midpoint between touches
                 const rect = viewport.getBoundingClientRect();
                 const viewportMidX = touchMidX - rect.left;
                 const viewportMidY = touchMidY - rect.top;
@@ -383,8 +557,8 @@
                 panY = viewportMidY - (viewportMidY - lastPanYTouch) * scaleFactor + dy;
                 
                 scale = newScale;
-                touchStartDist = newDist; // Update start distance for continuous scaling
-                lastPanXTouch = panX; // Update last pan for next move
+                touchStartDist = newDist;
+                lastPanXTouch = panX;
                 lastPanYTouch = panY;
                 touchStartX = touchMidX;
                 touchStartY = touchMidY;
@@ -392,10 +566,7 @@
                 applyTransform();
 
             } else if (e.touches.length === 1 && touchStartDist < 0) {
-                // Single finger: Drag (Pan only)
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
-                    return; // Allow scrolling/interaction on form elements
-                }
+                if (e.target.closest('input, button, select, th')) return;
                 e.preventDefault();
 
                 const dx = e.touches[0].clientX - touchStartX;
@@ -416,10 +587,10 @@
             return Math.sqrt(Math.pow(t2.clientX - t1.clientX, 2) + Math.pow(t2.clientY - t1.clientY, 2));
         }
 
-        // Initialize state
+        // --- Initial Load ---
         window.onload = function() {
-            updateInning();
-            // Initial call to set the transform (scale=1, pan=0)
+            initLineupInput();
+            renderRecordTable();
             applyTransform(); 
         }
 
